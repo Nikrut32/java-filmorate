@@ -84,12 +84,11 @@ public class FilmController {
             log.warn("Валидация не пройдена: описание фильма длиннее 200 символов");
             throw new ValidationException("Максимальная длина описания - 200 символов");
         }
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 7, 13))
-                || film.getReleaseDate().isAfter(LocalDate.now())) {
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             log.warn("Валидация не пройдена: некорректная дата релиза {}", film.getReleaseDate());
             throw new ValidationException("Дата релиза должная быть не раньше 28 декабря 1895 года и не в будущем");
         }
-        if (film.getDuration() < 0) {
+        if (film.getDuration() <= 0) {
             log.warn("Валидация не пройдена: отрицательная продолжительность {}", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }

@@ -68,7 +68,7 @@ public class UserController {
             return oldUser;
         }
         log.warn("Ошибка обновления пользователя: пользователь с ID {} не найден", newUser.getId());
-        throw new ValidationException("Фильма с таким Id = " + newUser.getId() + "нет в списке");
+        throw new ValidationException("Пользователя с таким Id = " + newUser.getId() + "нет в списке");
     }
 
     private long nextId() {

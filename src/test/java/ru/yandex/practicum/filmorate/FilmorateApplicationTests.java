@@ -199,7 +199,7 @@ class FilmorateApplicationTests {
 				Film.class
 		);
 
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responsePost.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, responsePost.getStatusCode());
 	}
 
 	@Test
@@ -217,7 +217,25 @@ class FilmorateApplicationTests {
 				Film.class
 		);
 
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responsePost.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, responsePost.getStatusCode());
+	}
+
+	@Test
+	void postZeroDurationFilmTest() {
+		Film testFilm = Film.builder()
+				.name("TestFilm")
+				.description("Test")
+				.releaseDate(LocalDate.of(2022, 11, 6))
+				.duration(0L)
+				.build();
+
+		ResponseEntity<Film> responsePost = restTemplate.postForEntity(
+				baseUrl("films"),
+				testFilm,
+				Film.class
+		);
+
+		assertEquals(HttpStatus.BAD_REQUEST, responsePost.getStatusCode());
 	}
 
 	@Test
@@ -268,25 +286,7 @@ class FilmorateApplicationTests {
 				Film.class
 		);
 
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responsePost.getStatusCode());
-	}
-
-	@Test
-	void postAfterMaxDateFilmTest() {
-		Film testFilm = Film.builder()
-				.name("TestFilm")
-				.description("Test ")
-				.releaseDate(LocalDate.now().plusDays(1))
-				.duration(-95L)
-				.build();
-
-		ResponseEntity<Film> responsePost = restTemplate.postForEntity(
-				baseUrl("films"),
-				testFilm,
-				Film.class
-		);
-
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responsePost.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, responsePost.getStatusCode());
 	}
 
 	@Test
@@ -511,7 +511,7 @@ class FilmorateApplicationTests {
 				User.class
 		);
 
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responsePost.getStatusCode());
+		assertEquals(HttpStatus.BAD_REQUEST, responsePost.getStatusCode());
 	}
 
 	@Test
@@ -527,6 +527,7 @@ class FilmorateApplicationTests {
 				.id(1L)
 				.email("TestUser@mail.ru")
 				.login("Test1234Update")
+				.birthday(LocalDate.of(2003, 12, 11))
 				.build();
 
 		ResponseEntity<User> responsePost = restTemplate.postForEntity(
