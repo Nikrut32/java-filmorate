@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.ValidationNotIdException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -68,7 +69,7 @@ public class UserController {
             return oldUser;
         }
         log.warn("Ошибка обновления пользователя: пользователь с ID {} не найден", newUser.getId());
-        throw new ValidationException("Пользователя с таким Id = " + newUser.getId() + "нет в списке");
+        throw new ValidationNotIdException("Пользователя с таким Id = " + newUser.getId() + "нет в списке");
     }
 
     private long nextId() {

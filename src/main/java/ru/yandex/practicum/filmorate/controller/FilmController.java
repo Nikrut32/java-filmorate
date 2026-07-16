@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.ValidationNotIdException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
@@ -67,7 +68,7 @@ public class FilmController {
         }
 
         log.warn("Ошибка обновления фильма: фильм с ID {} не найден", newFilm.getId());
-        throw new ValidationException("Фильма с таким Id = " + newFilm.getId() + "нет в списке");
+        throw new ValidationNotIdException("Фильма с таким Id = " + newFilm.getId() + "нет в списке");
     }
 
     private long nextId() {
