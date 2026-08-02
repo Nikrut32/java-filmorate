@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 
@@ -20,6 +22,8 @@ public class FilmController {
     private FilmStorage filmStorage;
     @Autowired
     private FilmService filmService;
+    @Autowired
+    private UserStorage userStorage;
 
     @GetMapping
     public Collection<Film> getFilms() {
@@ -28,8 +32,13 @@ public class FilmController {
         return filmStorage.getFilmStorage().values();
     }
 
+    @GetMapping("/popular")
+    public Collection<Film> getTopFilms(@RequestParam(defaultValue = "10") long count) {
+        return filmService.getTopFilms(count);
+    }
+
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
+    public Film createFilm(@RequestBody Film film) {
         log.info("Получен запрос POST /films на добавление фильма: {}", film);
         return filmStorage.addFilmStorage(film);
     }
@@ -42,20 +51,27 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public void addLike(@PathVariable long id, @PathVariable long userId) {
+    public String addLike(@PathVariable long id, @PathVariable long userId) {
         filmService.addLike(id, userId);
+        String filmName = filmStorage.getFilmById(id).getName();
+        String userLogin = userStorage.getUserById(userId).getLogin();
+        return "Пользователь " + userLogin + " поставил лайк на фильм «" + filmName + "»";
     }
 
-    //Добавить отлов исключений
     @DeleteMapping("/{deleteFilmId}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteFilm(@PathVariable long deleteFilmId) {
+    public String deleteFilm(@PathVariable long deleteFilmId) {
         filmStorage.removeFilmStorage(deleteFilmId);
+        String filmName = filmStorage.getFilmById(deleteFilmId).getName();
+        return "Фильм «" + filmName + "» успешно удален";
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteLike(@PathVariable long id, @PathVariable long userId) {
+    public String deleteLike(@PathVariable long id, @PathVariable long userId) {
         filmService.deleteLike(id, userId);
+        String filmName = filmStorage.getFilmById(id).getName();
+        String userLogin = userStorage.getUserById(userId).getLogin();
+        return "Пользователь " + userLogin + " убрал лайк поставленный на фильм «" + filmName + "»";
     }
 }

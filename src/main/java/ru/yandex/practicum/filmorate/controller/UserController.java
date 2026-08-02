@@ -54,20 +54,25 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public void addFriend(@PathVariable long id, @PathVariable long friendId) {
+    public String addFriend(@PathVariable long id, @PathVariable long friendId) {
         userService.addFriend(id, friendId);
+        String userLogin = userStorage.getUserById(id).getLogin();
+        String friendLogin = userStorage.getUserById(friendId).getLogin();
+        return "Пользователь " + userLogin + " успешно добавил в друзья пользователя " + friendLogin;
     }
 
-    //Добавить отлов исключений
     @DeleteMapping("/{deleteUserId}")
     public String deleteUser(@PathVariable long deleteUserId) {
         userStorage.removeUserStorage(deleteUserId);
-        return "Фильм с Id: " + deleteUserId + ", успешно удален.";
+        return "Пользователь с Id: " + deleteUserId + ", успешно удален.";
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteFriend(@PathVariable long id, @PathVariable long friendId) {
+    public String deleteFriend(@PathVariable long id, @PathVariable long friendId) {
         userService.deleteFriend(id, friendId);
+        String userLogin = userStorage.getUserById(id).getLogin();
+        String friendLogin = userStorage.getUserById(friendId).getLogin();
+        return "Пользователь " + userLogin + " успешно удалил из друзей пользователя " + friendLogin;
     }
 }

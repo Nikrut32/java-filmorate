@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.exception.ValidationNotIdException;
+import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -36,6 +36,9 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void removeUserStorage(long userId) {
+        if (!checkingId(userId)) {
+            throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
+        }
         users.remove(userId);
     }
 
@@ -67,7 +70,7 @@ public class InMemoryUserStorage implements UserStorage {
             return oldUser;
         }
         log.warn("Ошибка обновления пользователя: пользователь с ID {} не найден", newUser.getId());
-        throw new ValidationNotIdException("Пользователя с таким Id = " + newUser.getId() + "нет в списке");
+        throw new ValidationNotObjectException("Пользователя с таким Id = " + newUser.getId() + "нет в списке");
     }
 
     @Override
@@ -80,6 +83,11 @@ public class InMemoryUserStorage implements UserStorage {
         return users;
     }
 
+    @Override
+    public boolean checkingId(long id) {
+        return users.containsKey(id);
+    }
+
     private long nextId() {
         long maxId = users.keySet()
                 .stream()
@@ -90,13 +98,34 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     private void exceptionUser(User user) {
+        if (user.getLogin() == null) {
+            log.warn("Валидация не пройдена: логин не был указан");
+            throw new ValidationException("Логин не был указан");
+        }
+        if (user.getLogin().isBlank()) {
+            log.warn("Валидация не пройдена: логин пустой");
+            throw new ValidationException("Логин не может быть пустым");
+        }
         if (user.getLogin().contains(" ")) {
             log.warn("Валидация не пройдена: логин {} содержит пробелы", user.getLogin());
             throw new ValidationException("Логин не должен содержать пробелов");
+        }
+        if (user.getBirthday() == null) {
+            log.warn("Валидация не пройдена: день рождения не был указан");
+            throw new ValidationException("День рождения не был указан");
         }
         if (user.getBirthday().isAfter(LocalDate.now())) {
             log.warn("Валидация не пройдена: дата рождения {} в будущем", user.getBirthday());
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
+        if (user.getEmail() == null) {
+            log.warn("Валидация не пройдена: email не был указан");
+            throw new ValidationException("Email не был указан");
+        }
+        if (user.getEmail().isBlank()) {
+            log.warn("Валидация не пройдена: email пустой");
+            throw new ValidationException("Указан пустой email");
+        }
+
     }
 }

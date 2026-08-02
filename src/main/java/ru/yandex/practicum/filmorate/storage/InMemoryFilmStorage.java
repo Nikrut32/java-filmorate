@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.exception.ValidationNotIdException;
+import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -33,6 +33,9 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void removeFilmStorage(long filmId) {
+        if (!checkingId(filmId)) {
+            throw new ValidationNotObjectException("Фильм с таким ID: " + filmId + " не найден");
+        }
         films.remove(filmId);
     }
 
@@ -66,7 +69,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
 
         log.warn("Ошибка обновления фильма: фильм с ID {} не найден", newFilm.getId());
-        throw new ValidationNotIdException("Фильма с таким Id = " + newFilm.getId() + "нет в списке");
+        throw new ValidationNotObjectException("Фильма с таким Id = " + newFilm.getId() + "нет в списке");
     }
 
     @Override
@@ -79,6 +82,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.get(userId);
     }
 
+    @Override
+    public boolean checkingId(long id) {
+        return films.containsKey(id);
+    }
+
     private long nextId() {
         long maxId = films.keySet()
                 .stream()
@@ -89,9 +97,17 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     private void exceptionFilm(Film film) {
+        if (film.getDescription() == null) {
+            log.warn("Валидация не пройдена: описание фильма не указано");
+            throw new ValidationException("Описание фильма не указано");
+        }
         if (film.getDescription().length() > 200) {
             log.warn("Валидация не пройдена: описание фильма длиннее 200 символов");
             throw new ValidationException("Максимальная длина описания - 200 символов");
+        }
+        if (film.getDescription().isBlank()) {
+            log.warn("Валидация не пройдена: описание фильма пустое");
+            throw new ValidationException("Описание фильма не может быть пустым");
         }
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             log.warn("Валидация не пройдена: некорректная дата релиза {}", film.getReleaseDate());
@@ -100,6 +116,14 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (film.getDuration() <= 0) {
             log.warn("Валидация не пройдена: отрицательная продолжительность {}", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
+        }
+        if (film.getName() == null) {
+            log.warn("Валидация не пройдена: название фильма не указано");
+            throw new ValidationException("Название фильма не указано");
+        }
+        if (film.getName().isBlank()) {
+            log.warn("Валидация не пройдена: название фильма пустое");
+            throw new ValidationException("Название фильма не может быть пустым");
         }
     }
 }

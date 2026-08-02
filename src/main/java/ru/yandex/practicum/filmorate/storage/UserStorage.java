@@ -10,4 +10,5 @@ public interface UserStorage {
     public User updateUserStorage(User newUser);
     public User getUserById(long userId);
     public Map<Long, User> getUserStorage();
+    public boolean checkingId(long id);
 }

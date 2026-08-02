@@ -10,4 +10,5 @@ public interface FilmStorage {
     public Film updateFilmStorage(Film newFilm);
     public Map<Long, Film> getFilmStorage();
     public Film getFilmById(long filmId);
+    public boolean checkingId(long id);
 }
