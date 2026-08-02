@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
@@ -25,54 +24,72 @@ public class UserController {
 
     @GetMapping
     public Collection<User> getUsers() {
-        log.info("Получен запрос GET /users. Текущее количество пользователей: {}"
-                , userStorage.getUserStorage().size());
+        log.info("Получен запрос GET /users. Текущее количество пользователей: {}",
+                userStorage.getUserStorage().size());
+        log.info("Успешно возвращено {} пользователей", userStorage.getUserStorage().size());
         return userStorage.getUserStorage().values();
     }
 
     @GetMapping("{id}/friends")
     public Set<User> getFriends(@PathVariable long id) {
+        log.info("Получен запрос GET /users/{}/friends на получение списка друзей", id);
+        log.info("У пользователя с id={} найдено {} друзей", id, userService.getAllFriends(id).size());
         return userService.getAllFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public Set<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
-        return userService.getCommonFriends(id, otherId);
+        log.info("Получен запрос GET /users/{}/friends/common/{} на поиск общих друзей", id, otherId);
+        Set<User> commonFriends = userService.getCommonFriends(id, otherId);
+        log.info("Найдено {} общих друзей между пользователями с id={} и id={}",
+                commonFriends.size(), id, otherId);
+        return commonFriends;
     }
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
         log.info("Получен запрос POST /users на создание пользователя: {}", user);
-        return userStorage.addUserStorage(user);
+        User createdUser = userStorage.addUserStorage(user);
+        log.info("Пользователь успешно создан с id={}: {}", createdUser.getId(), createdUser.getLogin());
+        return createdUser;
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User newUser) {
-        log.info("Получен запрос PUT /users на обновление пользователя: {}", newUser);
-        return userStorage.updateUserStorage(newUser);
+        log.info("Получен запрос PUT /users на обновление пользователя с id={}: {}",
+                newUser.getId(), newUser.getLogin());
+        User updatedUser = userStorage.updateUserStorage(newUser);
+        log.info("Пользователь с id={} успешно обновлен: {}", updatedUser.getId(), updatedUser.getLogin());
+        return updatedUser;
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
     public String addFriend(@PathVariable long id, @PathVariable long friendId) {
+        log.info("Получен запрос PUT /users/{}/friends/{} на добавление в друзья", id, friendId);
         userService.addFriend(id, friendId);
         String userLogin = userStorage.getUserById(id).getLogin();
         String friendLogin = userStorage.getUserById(friendId).getLogin();
+        log.info("Пользователь {} успешно добавил в друзья пользователя {}", userLogin, friendLogin);
         return "Пользователь " + userLogin + " успешно добавил в друзья пользователя " + friendLogin;
     }
 
     @DeleteMapping("/{deleteUserId}")
     public String deleteUser(@PathVariable long deleteUserId) {
+        log.info("Получен запрос DELETE /users/{} на удаление пользователя", deleteUserId);
         userStorage.removeUserStorage(deleteUserId);
+        log.info("Пользователь с id={} успешно удален", deleteUserId);
         return "Пользователь с Id: " + deleteUserId + ", успешно удален.";
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
     public String deleteFriend(@PathVariable long id, @PathVariable long friendId) {
+        log.info("Получен запрос DELETE /users/{}/friends/{} на удаление из друзей", id, friendId);
         userService.deleteFriend(id, friendId);
         String userLogin = userStorage.getUserById(id).getLogin();
         String friendLogin = userStorage.getUserById(friendId).getLogin();
+        log.info("Пользователь {} успешно удалил из друзей пользователя {}", userLogin, friendLogin);
         return "Пользователь " + userLogin + " успешно удалил из друзей пользователя " + friendLogin;
     }
 }

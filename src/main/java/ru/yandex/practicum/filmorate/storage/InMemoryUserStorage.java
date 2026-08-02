@@ -75,16 +75,26 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User getUserById(long userId) {
-        return users.get(userId);
+        log.trace("Вызов метода getUserById с параметром userId={}", userId);
+        if (!users.containsKey(userId)) {
+            log.warn("Запрос пользователя по несуществующему id={}", userId);
+            throw new ValidationNotObjectException("Запрос пользователя по несуществующему Id = " + userId);
+        }
+
+        User user = users.get(userId);
+        log.trace("Найден пользователь с id={}: {}", userId, user.getLogin());
+        return user;
     }
 
     @Override
     public Map<Long, User> getUserStorage() {
+        log.trace("Вызов метода getUserStorage");
         return users;
     }
 
     @Override
     public boolean checkingId(long id) {
+        log.trace("Вызов метода checkingId с параметром id={}", id);
         return users.containsKey(id);
     }
 

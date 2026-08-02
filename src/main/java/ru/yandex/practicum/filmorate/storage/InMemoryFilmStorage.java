@@ -34,6 +34,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void removeFilmStorage(long filmId) {
         if (!checkingId(filmId)) {
+            log.warn("Ошибка удаления фильма: фильма с таким ID: {}, не найден", filmId);
             throw new ValidationNotObjectException("Фильм с таким ID: " + filmId + " не найден");
         }
         films.remove(filmId);
@@ -74,16 +75,25 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Map<Long, Film> getFilmStorage() {
+        log.trace("Вызов метода getFilmStorage");
         return films;
     }
 
     @Override
-    public Film getFilmById(long userId) {
-        return films.get(userId);
+    public Film getFilmById(long filmId) {
+        log.trace("Вызов метода getFilmById с параметром userId={}", filmId);
+        if (!films.containsKey(filmId)) {
+            log.warn("Запрос фильма по несуществующему id={}", filmId);
+            throw new ValidationNotObjectException("Запрос фильма по несуществующему Id = " + filmId);
+        }
+        Film film = films.get(filmId);
+        log.trace("Найден фильм с id={}: {}", filmId, film.getName());
+        return film;
     }
 
     @Override
     public boolean checkingId(long id) {
+        log.trace("Вызов метода checkingId с параметром id={}", id);
         return films.containsKey(id);
     }
 

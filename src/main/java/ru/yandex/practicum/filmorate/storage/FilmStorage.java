@@ -6,9 +6,14 @@ import java.util.Map;
 
 public interface FilmStorage {
     public Film addFilmStorage(Film film);
+
     public void removeFilmStorage(long filmId);
+
     public Film updateFilmStorage(Film newFilm);
+
     public Map<Long, Film> getFilmStorage();
+
     public Film getFilmById(long filmId);
+
     public boolean checkingId(long id);
 }
