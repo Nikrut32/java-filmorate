@@ -20,6 +20,7 @@ public class User {
     private String login;
     private String name;
     private LocalDate birthday;
+    @JsonIgnore
     @EqualsAndHashCode.Exclude
     @JsonIgnoreProperties("friends")
     private Set<User> friends;
