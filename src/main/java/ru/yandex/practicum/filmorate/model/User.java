@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Email;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +20,7 @@ public class User {
     private String login;
     private String name;
     private LocalDate birthday;
-    @JsonIgnore
     @EqualsAndHashCode.Exclude
+    @JsonIgnoreProperties("friends")
     private Set<User> friends;
 }

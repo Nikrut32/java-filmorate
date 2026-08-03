@@ -30,10 +30,9 @@ public class UserController {
         return userStorage.getUserStorage().values();
     }
 
-    @GetMapping("{id}/friends")
+    @GetMapping("/{id}/friends")
     public Set<User> getFriends(@PathVariable long id) {
         log.info("Получен запрос GET /users/{}/friends на получение списка друзей", id);
-        log.info("У пользователя с id={} найдено {} друзей", id, userService.getAllFriends(id).size());
         return userService.getAllFriends(id);
     }
 
