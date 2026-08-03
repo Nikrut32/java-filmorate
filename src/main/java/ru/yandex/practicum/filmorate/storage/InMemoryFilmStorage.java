@@ -6,11 +6,10 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 @Component
@@ -23,7 +22,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film addFilmStorage(Film film) {
         exceptionFilm(film);
         film.setId(nextId());
-        film.setUsersWhoLiked(new HashSet<User>());
+        film.setUsersWhoLiked(new LinkedHashSet<>());
         log.trace("Фильму присвоен Id = {}", film.getId());
         films.put(film.getId(), film);
         log.trace("Фильм добавлен в общий список");

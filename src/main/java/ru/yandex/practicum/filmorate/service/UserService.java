@@ -31,8 +31,8 @@ public class UserService {
         }
         User friend = userStorage.getUserById(friendId);
         log.trace("Друг с id={} найден: {}", friendId, friend.getLogin());
-        user.getFriends().add(friend);
-        friend.getFriends().add(user);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
         log.info("Пользователь {} (id={}) и пользователь {} (id={}) стали друзьями",
                 user.getLogin(), userId, friend.getLogin(), friendId);
         log.trace("Количество друзей у пользователя {}: {}", user.getLogin(), user.getFriends().size());
@@ -52,8 +52,8 @@ public class UserService {
         }
         User friend = userStorage.getUserById(friendId);
         log.trace("Друг с id={} найден: {}", friendId, friend.getLogin());
-        user.getFriends().remove(friend);
-        friend.getFriends().remove(user);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
         log.info("Пользователь {} (id={}) и пользователь {} (id={}) перестали быть друзьями",
                 user.getLogin(), userId, friend.getLogin(), friendId);
         log.trace("Количество друзей у пользователя {}: {}", user.getLogin(), user.getFriends().size());
@@ -69,9 +69,9 @@ public class UserService {
         log.trace("Пользователь с id={} найден: {}", userId, user.getLogin());
         log.info("Получен список друзей для пользователя {} (id={}). Количество друзей: {}",
                 user.getLogin(), userId, user.getFriends().size());
-        log.trace("Список друзей пользователя {}: {}", user.getLogin(),
-                user.getFriends().stream().map(User::getLogin).collect(Collectors.toSet()));
-        return user.getFriends();
+        return user.getFriends().stream()
+                .map(id -> userStorage.getUserById(id))
+                .collect(Collectors.toSet());
     }
 
     public Set<User> getCommonFriends(long userId, long otherId) {
@@ -91,7 +91,8 @@ public class UserService {
         log.info("Найдены общие друзья для пользователей {} (id={}) и {} (id={}).",
                 user.getLogin(), userId, otherUser.getLogin(), otherId);
         return user.getFriends().stream()
-                .filter(us -> otherUser.getFriends().contains(us))
+                .filter(id -> otherUser.getFriends().contains(id))
+                .map(id -> userStorage.getUserById(id))
                 .collect(Collectors.toSet());
     }
 }
