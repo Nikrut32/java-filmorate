@@ -68,7 +68,7 @@ class FilmorateApplicationTests {
 		);
 
 		testFilm.setId(1L);
-		testFilm.setUsersWhoLiked(new HashSet<User>());
+		testFilm.setUsersWhoLiked(new HashSet<>());
 		Collection<Film> films = List.of(testFilm);
 		String jsonString =  gson.toJson(films);
 
@@ -83,7 +83,7 @@ class FilmorateApplicationTests {
 				.description("Test")
 				.releaseDate(LocalDate.of(2022, 11, 6))
 				.duration(95L)
-				.usersWhoLiked(new HashSet<User>())
+				.usersWhoLiked(new HashSet<>())
 				.build();
 
 		ResponseEntity<Film> responsePost1 = restTemplate.postForEntity(
@@ -115,9 +115,9 @@ class FilmorateApplicationTests {
 		);
 
 		testFilm1.setId(1L);
-		testFilm1.setUsersWhoLiked(new HashSet<User>());
+		testFilm1.setUsersWhoLiked(new HashSet<>());
 		testFilm2.setId(2L);
-		testFilm2.setUsersWhoLiked(new HashSet<User>());
+		testFilm2.setUsersWhoLiked(new HashSet<>());
 		Collection<Film> films = List.of(testFilm1, testFilm2);
 		String jsonString =  gson.toJson(films);
 
@@ -161,7 +161,7 @@ class FilmorateApplicationTests {
 		);
 
 		testFilm.setId(1L);
-		testFilm.setUsersWhoLiked(new HashSet<User>());
+		testFilm.setUsersWhoLiked(new HashSet<>());
 		testFilm.setDescription(testNewFilm.getDescription());
 		Collection<Film> films = List.of(testFilm);
 		String jsonString =  gson.toJson(films);
@@ -369,7 +369,7 @@ class FilmorateApplicationTests {
 
 		testFilm.setId(1L);
 		testUser.setId(1L);
-		testFilm.setUsersWhoLiked(Set.of(testUser));
+		testFilm.setUsersWhoLiked(Set.of(testUser.getId()));
 		String jsonString = gson.toJson(Set.of(testFilm));
 
 		assertEquals(jsonString, responseGet.getBody());
@@ -525,15 +525,12 @@ class FilmorateApplicationTests {
 
 		assertEquals(HttpStatus.OK, responseGet.getStatusCode());
 
-		testUser1.setId(1L);
-		testUser2.setId(2L);
-		testUser3.setId(3L);
 		testFilm1.setId(1L);
-		testFilm1.setUsersWhoLiked(new LinkedHashSet<>(List.of(testUser1, testUser2, testUser3)));
+		testFilm1.setUsersWhoLiked(new LinkedHashSet<>(List.of(1L, 2L, 3L)));
 		testFilm2.setId(2L);
-		testFilm2.setUsersWhoLiked(new LinkedHashSet<>(List.of(testUser1, testUser2)));
+		testFilm2.setUsersWhoLiked(new LinkedHashSet<>(List.of(1L, 2L)));
 		testFilm3.setId(3L);
-		testFilm3.setUsersWhoLiked(new LinkedHashSet<>(List.of(testUser1)));
+		testFilm3.setUsersWhoLiked(new LinkedHashSet<>(List.of(1L)));
 		String jsonString = gson.toJson(new LinkedHashSet<>(List.of(testFilm1, testFilm2)));
 
 		assertEquals(jsonString, responseGet.getBody());
