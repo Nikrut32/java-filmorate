@@ -106,10 +106,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     private void exceptionFilm(Film film) {
-        if (film.getDescription() == null) {
-            log.warn("Валидация не пройдена: описание фильма не указано");
-            throw new ValidationException("Описание фильма не указано");
-        }
         if (film.getDescription().length() > 200) {
             log.warn("Валидация не пройдена: описание фильма длиннее 200 символов");
             throw new ValidationException("Максимальная длина описания - 200 символов");

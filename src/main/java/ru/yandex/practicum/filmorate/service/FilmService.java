@@ -36,7 +36,7 @@ public class FilmService {
         }
         User user = userStorage.getUserById(userId);
         log.trace("Пользователь с id={} найден: {}", userId, user.getLogin());
-        film.getUsersWhoLiked().add(user);
+        film.getUsersWhoLiked().add(userId);
         log.info("Пользователь {} (id={}) поставил лайк фильму '{}' (id={})",
                 user.getLogin(), userId, film.getName(), filmId);
         log.trace("Текущее количество лайков у фильма '{}': {}", film.getName(), film.getUsersWhoLiked().size());
@@ -56,7 +56,7 @@ public class FilmService {
         }
         User user = userStorage.getUserById(userId);
         log.trace("Пользователь с id={} найден: {}", userId, user.getLogin());
-        film.getUsersWhoLiked().remove(user);
+        film.getUsersWhoLiked().remove(userId);
         log.info("Пользователь {} (id={}) убрал лайк с фильма '{}' (id={})",
                 user.getLogin(), userId, film.getName(), filmId);
         log.trace("Текущее количество лайков у фильма '{}': {}", film.getName(), film.getUsersWhoLiked().size());

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,15 +15,13 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 @Slf4j
 public class FilmController {
 
-    @Autowired
-    private FilmStorage filmStorage;
-    @Autowired
-    private FilmService filmService;
-    @Autowired
-    private UserStorage userStorage;
+    private final FilmStorage filmStorage;
+    private final FilmService filmService;
+    private final UserStorage userStorage;
 
     @GetMapping
     public Collection<Film> getFilms() {
@@ -34,8 +33,12 @@ public class FilmController {
     @GetMapping("/popular")
     public Collection<Film> topFilms(@RequestParam(defaultValue = "10") long count) {
         log.info("Получен запрос GET /films/popular с параметром count={}", count);
-        log.info("Успешно возвращено {} популярных фильмов", filmService.getTopFilms(count).size());
         return filmService.getTopFilms(count);
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable long id) {
+        return  filmStorage.getFilmById(id);
     }
 
     @PostMapping

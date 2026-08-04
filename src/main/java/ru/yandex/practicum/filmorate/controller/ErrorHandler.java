@@ -27,6 +27,6 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValid(final MethodArgumentNotValidException e) {
-        return new ErrorResponse("Ошибка валидации", "Email указан не верно");
+        return new ErrorResponse("Ошибка валидации", e.getBindingResult().getFieldError().getDefaultMessage());
     }
 }

@@ -14,5 +14,5 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Long duration;
-    private Set<User> usersWhoLiked;
+    private Set<Long> usersWhoLiked;
 }

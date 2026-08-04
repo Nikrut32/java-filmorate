@@ -1,10 +1,12 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -14,13 +16,12 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 @Slf4j
 public class UserController {
 
-    @Autowired
-    private UserStorage userStorage;
-    @Autowired
-    private UserService userService;
+    private final UserStorage userStorage;
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> getUsers() {
@@ -43,6 +44,11 @@ public class UserController {
         log.info("Найдено {} общих друзей между пользователями с id={} и id={}",
                 commonFriends.size(), id, otherId);
         return commonFriends;
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable long id) {
+        return   userStorage.getUserById(id);
     }
 
     @PostMapping
