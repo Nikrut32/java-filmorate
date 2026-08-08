@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.AnswerString;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -68,31 +69,31 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public String addFriend(@PathVariable long id, @PathVariable long friendId) {
+    public AnswerString addFriend(@PathVariable long id, @PathVariable long friendId) {
         log.info("Получен запрос PUT /users/{}/friends/{} на добавление в друзья", id, friendId);
         userService.addFriend(id, friendId);
         String userLogin = userStorage.getUserById(id).getLogin();
         String friendLogin = userStorage.getUserById(friendId).getLogin();
         log.info("Пользователь {} успешно добавил в друзья пользователя {}", userLogin, friendLogin);
-        return "Пользователь " + userLogin + " успешно добавил в друзья пользователя " + friendLogin;
+        return new AnswerString("Пользователь " + userLogin + " успешно добавил в друзья пользователя " + friendLogin);
     }
 
     @DeleteMapping("/{deleteUserId}")
-    public String deleteUser(@PathVariable long deleteUserId) {
+    public AnswerString deleteUser(@PathVariable long deleteUserId) {
         log.info("Получен запрос DELETE /users/{} на удаление пользователя", deleteUserId);
         userStorage.removeUserStorage(deleteUserId);
         log.info("Пользователь с id={} успешно удален", deleteUserId);
-        return "Пользователь с Id: " + deleteUserId + ", успешно удален.";
+        return new AnswerString("Пользователь с Id: " + deleteUserId + ", успешно удален.");
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public String deleteFriend(@PathVariable long id, @PathVariable long friendId) {
+    public AnswerString deleteFriend(@PathVariable long id, @PathVariable long friendId) {
         log.info("Получен запрос DELETE /users/{}/friends/{} на удаление из друзей", id, friendId);
         userService.deleteFriend(id, friendId);
         String userLogin = userStorage.getUserById(id).getLogin();
         String friendLogin = userStorage.getUserById(friendId).getLogin();
         log.info("Пользователь {} успешно удалил из друзей пользователя {}", userLogin, friendLogin);
-        return "Пользователь " + userLogin + " успешно удалил из друзей пользователя " + friendLogin;
+        return new AnswerString("Пользователь " + userLogin + " успешно удалил из друзей пользователя " + friendLogin);
     }
 }
