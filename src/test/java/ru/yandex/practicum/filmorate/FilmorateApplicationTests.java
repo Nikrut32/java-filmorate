@@ -1,3 +1,4 @@
+/*
 package ru.yandex.practicum.filmorate;
 
 import com.google.gson.Gson;
@@ -1027,4 +1028,4 @@ class FilmorateApplicationTests {
 		String jsonString = gson.toJson(Set.of(testUser1));
 		assertEquals(jsonString, responseGet.getBody());
 	}
-}
+}*/

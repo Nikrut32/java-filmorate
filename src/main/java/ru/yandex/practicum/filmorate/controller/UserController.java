@@ -5,12 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.model.AnswerString;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -22,23 +23,23 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public Collection<User> getUsers() {
+    public List<User> getUsers() {
         log.info("Получен запрос GET /users. Текущее количество пользователей: {}",
                 userStorage.getUserStorage().size());
         log.info("Успешно возвращено {} пользователей", userStorage.getUserStorage().size());
-        return userStorage.getUserStorage().values();
+        return userStorage.getUserStorage();
     }
 
     @GetMapping("/{id}/friends")
-    public Set<User> getFriends(@PathVariable long id) {
+    public List<User> getFriends(@PathVariable long id) {
         log.info("Получен запрос GET /users/{}/friends на получение списка друзей", id);
         return userService.getAllFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Set<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
+    public List<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
         log.info("Получен запрос GET /users/{}/friends/common/{} на поиск общих друзей", id, otherId);
-        Set<User> commonFriends = userService.getCommonFriends(id, otherId);
+        List<User> commonFriends = userService.getCommonFriends(id, otherId);
         log.info("Найдено {} общих друзей между пользователями с id={} и id={}",
                 commonFriends.size(), id, otherId);
         return commonFriends;
@@ -46,6 +47,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable long id) {
+        log.info("Получен запрос GET /users/{id}} с параметром id={}", id);
         return   userStorage.getUserById(id);
     }
 
@@ -58,41 +60,42 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@Valid @RequestBody User newUser) {
+    public User updateUser(@Valid @RequestBody UpdateUserRequest updateUser) {
         log.info("Получен запрос PUT /users на обновление пользователя с id={}: {}",
-                newUser.getId(), newUser.getLogin());
-        User updatedUser = userStorage.updateUserStorage(newUser);
+                updateUser.getId(), updateUser.getLogin());
+        User updatedUser = userService.updateUserStorage(updateUser.getId(), updateUser);
         log.info("Пользователь с id={} успешно обновлен: {}", updatedUser.getId(), updatedUser.getLogin());
         return updatedUser;
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public String addFriend(@PathVariable long id, @PathVariable long friendId) {
+    public AnswerString addFriend(@PathVariable long id, @PathVariable long friendId) {
         log.info("Получен запрос PUT /users/{}/friends/{} на добавление в друзья", id, friendId);
         userService.addFriend(id, friendId);
         String userLogin = userStorage.getUserById(id).getLogin();
         String friendLogin = userStorage.getUserById(friendId).getLogin();
         log.info("Пользователь {} успешно добавил в друзья пользователя {}", userLogin, friendLogin);
-        return "Пользователь " + userLogin + " успешно добавил в друзья пользователя " + friendLogin;
+        return new AnswerString("Пользователь " + userLogin + " успешно добавил в друзья пользователя " + friendLogin);
     }
 
     @DeleteMapping("/{deleteUserId}")
-    public String deleteUser(@PathVariable long deleteUserId) {
+    @ResponseStatus(HttpStatus.OK)
+    public AnswerString deleteUser(@PathVariable long deleteUserId) {
         log.info("Получен запрос DELETE /users/{} на удаление пользователя", deleteUserId);
         userStorage.removeUserStorage(deleteUserId);
         log.info("Пользователь с id={} успешно удален", deleteUserId);
-        return "Пользователь с Id: " + deleteUserId + ", успешно удален.";
+        return new AnswerString("Пользователь с Id: " + deleteUserId + ", успешно удален.");
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public String deleteFriend(@PathVariable long id, @PathVariable long friendId) {
+    public AnswerString deleteFriend(@PathVariable long id, @PathVariable long friendId) {
         log.info("Получен запрос DELETE /users/{}/friends/{} на удаление из друзей", id, friendId);
         userService.deleteFriend(id, friendId);
         String userLogin = userStorage.getUserById(id).getLogin();
         String friendLogin = userStorage.getUserById(friendId).getLogin();
         log.info("Пользователь {} успешно удалил из друзей пользователя {}", userLogin, friendLogin);
-        return "Пользователь " + userLogin + " успешно удалил из друзей пользователя " + friendLogin;
+        return new AnswerString("Пользователь " + userLogin + " успешно удалил из друзей пользователя " + friendLogin);
     }
 }
