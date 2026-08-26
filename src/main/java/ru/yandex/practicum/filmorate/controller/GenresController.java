@@ -12,7 +12,7 @@ import java.util.List;
 @RequestMapping("/genres")
 @RequiredArgsConstructor
 @Slf4j
-public class GenreController {
+public class GenresController {
 
     private final GenreStorage genreStorage;
 
@@ -29,3 +29,4 @@ public class GenreController {
         return genreStorage.getGenreById(id);
     }
 }
+

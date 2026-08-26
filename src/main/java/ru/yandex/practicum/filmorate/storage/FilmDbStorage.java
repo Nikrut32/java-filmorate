@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -14,8 +14,8 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-@Qualifier
 @Repository
 @Slf4j
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
@@ -30,7 +30,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id WHERE fl.name = ?";
     private static final String GET_ALL_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " +
             "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id;";
-    private static final String DELETE_QUERY = "DELETE CASCADE FROM films WHERE film_id = ?";
+    private static final String DELETE_QUERY = "DELETE FROM films WHERE film_id = ?";
     private static final String GET_BY_ID_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " +
             "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id WHERE film_id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?," +
@@ -57,9 +57,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         if (film.getGenres() == null) {
             film.setGenres(List.of());
-        }
-        if (checkName(film.getName())) {
-            throw new ValidationException("Фильм с таким названием уже существует");
         }
         if (!mpaStorage.checkRatingId(film.getMpa().getId())) {
             throw new ValidationNotObjectException(
@@ -163,9 +160,26 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         insertNotId(ADD_GENRE_QUERY, filmId, genreId);
     }
 
+    public Optional<Film> getFilmByIdTest(String query, long filmId) {
+        return findOne(query, filmId);
+    }
+
     private void saveGenres(Long filmId, List<Genre> genres) {
-        for (int i = 0; i < genres.size(); i++) {
-            update(ADD_GENRE_QUERY, filmId, genres.get(i).getId());
+        if (genres == null || genres.isEmpty()) {
+            return;
+        }
+        genreStorage.deleteGenreByFilmId(filmId);
+
+        List<Long> uniqueGenreIds = genres.stream()
+                .map(Genre::getId)
+                .collect(Collectors.toList());
+
+        for (Long genreId : uniqueGenreIds) {
+            try {
+                insertNotId(ADD_GENRE_QUERY, filmId, genreId);
+            } catch (DuplicateKeyException e) {
+                log.warn("Жанр с id {} уже добавлен для фильма {}", genreId, filmId);
+            }
         }
     }
 

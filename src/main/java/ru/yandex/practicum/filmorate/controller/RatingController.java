@@ -17,14 +17,14 @@ public class RatingController {
     private final MpaStorage mpaStorage;
 
     @GetMapping
-    public List<Mpa> getGenres() {
+    public List<Mpa> getRatings() {
         log.info("Получен запрос GET /genres. Текущее количество жанров: {}", mpaStorage.getRatingStorage().size());
         log.info("Успешно возвращено {} жанров", mpaStorage.getRatingStorage().size());
         return mpaStorage.getRatingStorage();
     }
 
     @GetMapping("/{id}")
-    public Mpa getGenreById(@PathVariable long id) {
+    public Mpa getRatingById(@PathVariable long id) {
         log.info("Получен запрос GET /genres/{id}} с параметром id={}", id);
         return mpaStorage.getRatingById(id);
     }

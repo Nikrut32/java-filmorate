@@ -43,7 +43,7 @@ CREATE TABLE liked_film (
     film_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     PRIMARY KEY (film_id, user_id),
-    CONSTRAINT CONSTRAINT_D FOREIGN KEY (film_id) REFERENCES films(film_id),
+    CONSTRAINT CONSTRAINT_D FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
     CONSTRAINT CONSTRAINT_D9 FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
@@ -59,7 +59,7 @@ CREATE TABLE film_genres (
     film_id INTEGER NOT NULL,
     genre_id INTEGER NOT NULL,
     PRIMARY KEY (film_id, genre_id),
-    CONSTRAINT CONSTRAINT_A FOREIGN KEY (film_id) REFERENCES films(film_id),
+    CONSTRAINT CONSTRAINT_A FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
     CONSTRAINT CONSTRAINT_A3 FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
 );
 
