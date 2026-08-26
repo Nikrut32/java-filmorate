@@ -47,6 +47,7 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         log.info("Получен запрос POST /films на добавление фильма: {}", film);
+        Film film2 = film;
         Film createdFilm = filmStorage.addFilmStorage(film);
 
         log.info("Фильм успешно создан с id={}: {}", createdFilm.getId(), createdFilm.getName());
