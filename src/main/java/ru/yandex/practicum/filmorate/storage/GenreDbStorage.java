@@ -46,6 +46,6 @@ public class GenreDbStorage extends BaseDbStorage<Genre> implements GenreStorage
 
     @Override
     public void deleteGenreByFilmId(long filmId) {
-        delete(DELETE_BY_FILM_ID_QUERY, filmId);
+        delete(true, DELETE_BY_FILM_ID_QUERY, filmId);
     }
 }

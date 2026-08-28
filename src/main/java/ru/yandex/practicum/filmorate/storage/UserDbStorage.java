@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -13,7 +12,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Qualifier
 @Repository
 @Slf4j
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
@@ -38,6 +36,8 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "us.email, us.login, us.name, us.birthday " +
             "FROM user_friends uf1 JOIN user_friends uf2 ON uf1.friend_id = uf2.friend_id " +
             "JOIN users us ON uf1.friend_id = us.user_id WHERE uf1.user_id = ? AND uf2.user_id = ?";
+    private static final String CHECK_FRIEND_BY_ID_QUERY = "SELECT COUNT(*) FROM user_friends " +
+            "WHERE user_id = ? AND friend_id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> rowMapper) {
         super(jdbc, rowMapper);
@@ -55,13 +55,14 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
                 user.getLogin(),
                 name,
                 user.getBirthday());
+        user.setName(name);
         user.setId(id);
         return user;
     }
 
     @Override
     public void removeUserStorage(long userId) {
-        delete(DELETE_QUERY, userId);
+        delete(checkingId(userId), DELETE_QUERY, userId);
     }
 
     @Override
@@ -94,13 +95,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        boolean status = checkFriend(userId, friendId);
+        boolean status = checkFriendAndConfirmation(userId, friendId);
         insertNotId(ADD_FRIEND_QUERY, userId, friendId, status);
     }
 
     @Override
     public void deleteFriend(long userId, long friendId) {
-        delete(DElETE_FRIEND_QUERY, userId, friendId);
+        delete(checkFriendById(userId, friendId), DElETE_FRIEND_QUERY, userId, friendId);
     }
 
     @Override
@@ -118,13 +119,18 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         return user.isPresent();
     }
 
-    private boolean checkFriend(long userId, long friendId) {
+    private boolean checkFriendAndConfirmation(long userId, long friendId) {
         int count = jdbc.queryForObject(CHECK_FRIEND_QUERY, Integer.class, userId, friendId, friendId, userId);
         boolean status = count > 0;
         if (status) {
             update(UPDATE_STATUS_FRIEND_QUERY, true, friendId, userId);
         }
         return status;
+    }
+
+    private boolean checkFriendById(long userId, long friendId) {
+        Integer count = jdbc.queryForObject(CHECK_FRIEND_BY_ID_QUERY, Integer.class, userId, friendId);
+        return count != null;
     }
 
     private void exceptionUser(User user) {

@@ -55,8 +55,11 @@ public class BaseDbStorage<T> {
         }
     }
 
-    protected void delete(String query, Long... id) {
-        int result = jdbc.update(query, id);
+    protected void delete(boolean check, String query, Long... id) {
+        if (!check) {
+            throw new DataProcessingException("Удалить данные не удалось");
+        }
+        jdbc.update(query, id);
     }
 
     protected void insertNotId(String query, Object... args) {

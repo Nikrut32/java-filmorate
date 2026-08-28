@@ -38,13 +38,14 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String ADD_LIKE_QUERY = "INSERT INTO liked_film (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM liked_film WHERE film_id = ? AND user_id = ?";
     private static final String GET_TOP_QUERY = "SELECT fl.film_id, name, description, release_date, " +
-            "duration, fl.rating_id, r.name_rating AS rating_name, COUNT(lf.user_id) AS likes_count " +
+            "duration, fl.rating_id, r.name_rating, COUNT(lf.user_id) AS likes_count " +
             "FROM liked_film AS lf " +
             "RIGHT JOIN films AS fl ON lf.film_id = fl.film_id " +
             "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " +
             "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, fl.duration, fl.rating_id, r.name_rating " +
             "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+    private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
 
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> rowMapper) {
@@ -89,7 +90,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public void removeFilmStorage(long filmId) {
-        delete(DELETE_QUERY, filmId);
+        delete(checkingId(filmId), DELETE_QUERY, filmId);
     }
 
     @Override
@@ -142,17 +143,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public void addLikeFilm(long filmId, long userId) {
-        insertNotId(ADD_LIKE_QUERY, filmId, userId);
+        try {
+            insertNotId(ADD_LIKE_QUERY, filmId, userId);
+        } catch (DuplicateKeyException e) {
+            log.warn("Пользователь с id {} уже поставил лайк на фильм с id: {}", userId, filmId);
+        }
+
     }
 
     @Override
     public void deleteLikeFilm(long filmId, long userId) {
-        delete(DELETE_LIKE_QUERY, filmId, userId);
+        delete(checkLikeId(filmId), DELETE_LIKE_QUERY, filmId, userId);
     }
 
     @Override
     public List<Film> getTopFilms(long count) {
-        return findAll(GET_TOP_QUERY, count);
+        List<Film> films = findAll(GET_TOP_QUERY, count);
+        films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
+        return films;
     }
 
     @Override
@@ -178,7 +186,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             try {
                 insertNotId(ADD_GENRE_QUERY, filmId, genreId);
             } catch (DuplicateKeyException e) {
-                log.warn("Жанр с id {} уже добавлен для фильма {}", genreId, filmId);
+                log.warn("Жанр с id: {} уже добавлен для фильма с id: {}", genreId, filmId);
             }
         }
     }
@@ -188,14 +196,35 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return film.isPresent();
     }
 
+    private boolean checkLikeId(long filmId) {
+        Integer count = jdbc.queryForObject(CHECK_LIKE_QUERY, Integer.class, filmId);
+        return count != null && count != 0;
+    }
+
     private void exceptionFilm(Film film) {
-        if (film.getDescription().length() > 200) {
-            log.warn("Валидация не пройдена: описание фильма длиннее 200 символов");
-            throw new ValidationException("Максимальная длина описания - 200 символов");
+        if (film.getName() == null) {
+            log.warn("Валидация не пройдена: название фильма не указано");
+            throw new ValidationException("Название фильма не указано");
+        }
+        if (film.getName().isBlank()) {
+            log.warn("Валидация не пройдена: название фильма пустое");
+            throw new ValidationException("Название фильма не может быть пустым");
+        }
+        if (film.getDescription() == null) {
+            log.warn("Валидация не пройдена: описание фильма не указано");
+            throw new ValidationException("Описание фильма не указано");
         }
         if (film.getDescription().isBlank()) {
             log.warn("Валидация не пройдена: описание фильма пустое");
             throw new ValidationException("Описание фильма не может быть пустым");
+        }
+        if (film.getDescription().length() > 200) {
+            log.warn("Валидация не пройдена: описание фильма длиннее 200 символов");
+            throw new ValidationException("Максимальная длина описания - 200 символов");
+        }
+        if (film.getReleaseDate() == null) {
+            log.warn("Валидация не пройдена: дата релиза не указана");
+            throw new ValidationException("Дата релиза должна быть указана");
         }
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             log.warn("Валидация не пройдена: некорректная дата релиза {}", film.getReleaseDate());
@@ -204,14 +233,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         if (film.getDuration() <= 0) {
             log.warn("Валидация не пройдена: отрицательная продолжительность {}", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
-        }
-        if (film.getName() == null) {
-            log.warn("Валидация не пройдена: название фильма не указано");
-            throw new ValidationException("Название фильма не указано");
-        }
-        if (film.getName().isBlank()) {
-            log.warn("Валидация не пройдена: название фильма пустое");
-            throw new ValidationException("Название фильма не может быть пустым");
         }
     }
 }
