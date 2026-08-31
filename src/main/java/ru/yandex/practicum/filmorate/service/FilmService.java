@@ -1,25 +1,26 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
-import java.util.Comparator;
+import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
-    @Autowired
-    private FilmStorage filmStorage;
-    @Autowired
-    private UserStorage userStorage;
+
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
+    private final GenreStorage genreStorage;
 
     public void addLike(long filmId, long userId) {
         log.trace("Вход в метод addLike с параметрами filmId={}, userId={}", filmId, userId);
@@ -28,18 +29,12 @@ public class FilmService {
             log.warn("Попытка добавить лайк к несуществующему фильму с id={}", filmId);
             throw new ValidationNotObjectException("Фильм с таким ID: " + filmId + " не найден");
         }
-        Film film = filmStorage.getFilmById(filmId);
-        log.trace("Фильм с id={} найден: {}", filmId, film.getName());
         if (!userStorage.checkingId(userId)) {
             log.warn("Попытка добавить лайк от несуществующего пользователя с id={}", userId);
             throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
         }
-        User user = userStorage.getUserById(userId);
-        log.trace("Пользователь с id={} найден: {}", userId, user.getLogin());
-        film.getUsersWhoLiked().add(userId);
-        log.info("Пользователь {} (id={}) поставил лайк фильму '{}' (id={})",
-                user.getLogin(), userId, film.getName(), filmId);
-        log.trace("Текущее количество лайков у фильма '{}': {}", film.getName(), film.getUsersWhoLiked().size());
+        filmStorage.addLikeFilm(filmId, userId);
+
     }
 
     public void deleteLike(long filmId, long userId) {
@@ -48,31 +43,57 @@ public class FilmService {
             log.warn("Попытка удалить лайк у несуществующего фильма с id={}", filmId);
             throw new ValidationNotObjectException("Фильм с таким ID:" + filmId + " не найден");
         }
-        Film film = filmStorage.getFilmById(filmId);
-        log.trace("Фильм с id={} найден: {}", filmId, film.getName());
         if (!userStorage.checkingId(userId)) {
             log.warn("Попытка удалить лайк от несуществующего пользователя с id={}", userId);
             throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
         }
-        User user = userStorage.getUserById(userId);
-        log.trace("Пользователь с id={} найден: {}", userId, user.getLogin());
-        film.getUsersWhoLiked().remove(userId);
-        log.info("Пользователь {} (id={}) убрал лайк с фильма '{}' (id={})",
-                user.getLogin(), userId, film.getName(), filmId);
-        log.trace("Текущее количество лайков у фильма '{}': {}", film.getName(), film.getUsersWhoLiked().size());
+        filmStorage.deleteLikeFilm(filmId, userId);
     }
 
-    public Collection<Film> getTopFilms(long count) {
+    public List<Film> getTopFilms(long count) {
         log.trace("Вход в метод getTopFilms с параметром count={}", count);
         if (count <= 0) {
             log.warn("Некорректное значение count={}", count);
             throw new ValidationException("Количество фильмов в топе не может быть ноль или меньше ноля");
         }
-        Collection<Film> topFilms = filmStorage.getFilmStorage().values().stream()
-                .sorted(Comparator.comparing((Film film) -> film.getUsersWhoLiked().size()).reversed())
-                .limit(count)
-                .toList();
-        log.info("Успешно получен топ-{} фильмов. Результат содержит {} фильмов", count, topFilms.size());
-        return topFilms;
+        return filmStorage.getTopFilms(count);
+    }
+
+    public void addGenreFilm(long filmId, long genreId) {
+        log.trace("Вход в метод addGenreFilm с параметрами filmId={}, genreId={}", filmId, genreId);
+        if (!filmStorage.checkingId(filmId)) {
+            log.warn("Попытка добавить жанр у несуществующего фильма с id={}", filmId);
+            throw new ValidationNotObjectException("Фильм с таким ID:" + filmId + " не найден");
+        }
+
+        if (!genreStorage.checkGenreId(genreId)) {
+            log.warn("Попытка добавить несуществующий жанр с id={}", genreId);
+            throw new ValidationNotObjectException("Жанр с таким ID:" + genreId + " не найден");
+        }
+        filmStorage.addGenreFilm(filmId, genreId);
+    }
+
+    public Film updateFilm(UpdateFilmRequest updateFilm) {
+        Film film = filmStorage.getFilmById(updateFilm.getId());
+        if (updateFilm.hasName()) {
+            film.setName(updateFilm.getName());
+        }
+        if (updateFilm.hasDescription()) {
+            film.setDescription(updateFilm.getDescription());
+        }
+        if (updateFilm.hasReleaseDate()) {
+            film.setReleaseDate(updateFilm.getReleaseDate());
+        }
+        if (updateFilm.hasDuration()) {
+            film.setDuration(updateFilm.getDuration());
+        }
+        if (updateFilm.hasRating()) {
+            film.setMpa(updateFilm.getMpa());
+        }
+        if (updateFilm.hasGenres()) {
+            film.setGenres(updateFilm.getGenres());
+        }
+
+        return filmStorage.updateFilmStorage(film);
     }
 }
