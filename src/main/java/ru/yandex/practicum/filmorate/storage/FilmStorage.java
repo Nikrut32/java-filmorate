@@ -24,4 +24,6 @@ public interface FilmStorage {
     public List<Film> getTopFilms(long count);
 
     public void addGenreFilm(long filmId, long genreId);
+
+    List<Film> getCommonFilms(long userId, long friendId);
 }

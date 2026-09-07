@@ -47,6 +47,31 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
     private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
 
+    private static final String GET_COMMON_FILMS_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " +
+            "fl.duration, fl.rating_id, r.name_rating, " +
+            "COUNT(lf.user_id) AS likes_count " +
+            "FROM films fl " +
+            "LEFT JOIN rating r ON fl.rating_id = r.rating_id " +
+            "LEFT JOIN liked_film lf ON fl.film_id = lf.film_id " +
+            "WHERE EXISTS ( " +
+            "    SELECT 1 FROM liked_film lf1 " +
+            "    WHERE lf1.film_id = fl.film_id AND lf1.user_id = ? " +
+            ") AND EXISTS ( " +
+            "    SELECT 1 FROM liked_film lf2 " +
+            "    WHERE lf2.film_id = fl.film_id AND lf2.user_id = ? " +
+            ") " +
+            "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " +
+            "fl.duration, fl.rating_id, r.name_rating " +
+            "ORDER BY likes_count DESC, fl.film_id ASC";
+
+    @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        log.trace("Вход в метод getCommonFilms с параметрами userId={}, friendId={}", userId, friendId);
+        List<Film> films = findAll(GET_COMMON_FILMS_QUERY, userId, friendId);
+        films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
+        log.info("Найдено {} общих фильмов у пользователей с id={} и id={}", films.size(), userId, friendId);
+        return films;
+    }
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> rowMapper) {
         super(jdbc, rowMapper);
