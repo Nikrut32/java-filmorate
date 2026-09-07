@@ -93,6 +93,9 @@ public class FilmService {
         if (updateFilm.hasGenres()) {
             film.setGenres(updateFilm.getGenres());
         }
+        if (updateFilm.hasDirectors()) {
+            film.setDirectors(updateFilm.getDirectors());
+        }
 
         return filmStorage.updateFilmStorage(film);
     }

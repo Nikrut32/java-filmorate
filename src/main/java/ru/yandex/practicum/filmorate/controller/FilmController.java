@@ -47,7 +47,6 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         log.info("Получен запрос POST /films на добавление фильма: {}", film);
-        Film film2 = film;
         Film createdFilm = filmStorage.addFilmStorage(film);
 
         log.info("Фильм успешно создан с id={}: {}", createdFilm.getId(), createdFilm.getName());
@@ -94,5 +93,12 @@ public class FilmController {
         return new AnswerString("Пользователь " + userLogin + " убрал лайк поставленный на фильм «" + filmName + "»");
     }
 
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(
+            @PathVariable long directorId,
+            @RequestParam(defaultValue = "year") String sortBy
+    ) {
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
+    }
 
 }

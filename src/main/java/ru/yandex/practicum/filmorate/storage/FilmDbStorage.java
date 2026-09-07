@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Director;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,30 +24,26 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private MpaStorage mpaStorage;
     @Autowired
     private GenreStorage genreStorage;
+    @Autowired
+    private DirectorStorage directorStorage;
 
-    private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, rating_id) " +
-            "VALUES (?, ?, ?, ?, ?)";
-    private static final String GET_BY_NAME_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " +
-            "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id WHERE fl.name = ?";
-    private static final String GET_ALL_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " +
-            "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id;";
+    private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, rating_id) " + "VALUES (?, ?, ?, ?, ?)";
+    private static final String GET_BY_NAME_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " + "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id WHERE fl.name = ?";
+    private static final String GET_ALL_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " + "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id;";
     private static final String DELETE_QUERY = "DELETE FROM films WHERE film_id = ?";
-    private static final String GET_BY_ID_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " +
-            "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id WHERE film_id = ?";
-    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?," +
-            " duration = ?, rating_id = ? WHERE film_id = ?";
+    private static final String GET_BY_ID_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " + "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id WHERE film_id = ?";
+    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?," + " duration = ?, rating_id = ? WHERE film_id = ?";
     private static final String ADD_LIKE_QUERY = "INSERT INTO liked_film (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM liked_film WHERE film_id = ? AND user_id = ?";
-    private static final String GET_TOP_QUERY = "SELECT fl.film_id, name, description, release_date, " +
-            "duration, fl.rating_id, r.name_rating, COUNT(lf.user_id) AS likes_count " +
-            "FROM liked_film AS lf " +
-            "RIGHT JOIN films AS fl ON lf.film_id = fl.film_id " +
-            "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " +
-            "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, fl.duration, fl.rating_id, r.name_rating " +
-            "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
+    private static final String GET_TOP_QUERY = "SELECT fl.film_id, name, description, release_date, " + "duration, fl.rating_id, r.name_rating, COUNT(lf.user_id) AS likes_count " + "FROM liked_film AS lf " + "RIGHT JOIN films AS fl ON lf.film_id = fl.film_id " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
     private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
 
+    private static final String ADD_DIRECTOR_QUERY = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
+    private static final String GET_FILM_DIRECTORS_QUERY = "SELECT d.director_id, d.name " + "FROM film_directors fd " + "JOIN directors d ON fd.director_id = d.director_id " + "WHERE fd.film_id = ?";
+    private static final String DELETE_FILM_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
+    private static final String GET_FILMS_BY_DIRECTOR_YEAR_QUERY = "SELECT fl.*, rt.name_rating " + "FROM films fl " + "LEFT JOIN rating rt ON fl.rating_id = rt.rating_id " + "JOIN film_directors fd ON fl.film_id = fd.film_id " + "WHERE fd.director_id = ? " + "ORDER BY fl.release_date ASC, fl.film_id ASC";
+    private static final String GET_FILMS_BY_DIRECTOR_LIKES_QUERY = "SELECT fl.*, rt.name_rating, COUNT(lf.user_id) AS likes_count " + "FROM films fl " + "LEFT JOIN rating rt ON fl.rating_id = rt.rating_id " + "JOIN film_directors fd ON fl.film_id = fd.film_id " + "LEFT JOIN liked_film lf ON fl.film_id = lf.film_id " + "WHERE fd.director_id = ? " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, rt.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> rowMapper) {
         super(jdbc, rowMapper);
@@ -60,31 +57,37 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             film.setGenres(List.of());
         }
         if (!mpaStorage.checkRatingId(film.getMpa().getId())) {
-            throw new ValidationNotObjectException(
-                    "Рейтинг с таким ID: " + film.getMpa().getId() + " не найден"
-            );
+            throw new ValidationNotObjectException("Рейтинг с таким ID: " + film.getMpa().getId() + " не найден");
         }
         for (Genre genre : film.getGenres()) {
             if (!genreStorage.checkGenreId(genre.getId())) {
-                throw new ValidationNotObjectException(
-                        "Жанр с таким ID: " + genre.getId() + " не найден"
-                );
+                throw new ValidationNotObjectException("Жанр с таким ID: " + genre.getId() + " не найден");
             }
         }
 
-        long id = insert(
-                INSERT_QUERY,
-                film.getName(),
-                film.getDescription(),
-                film.getReleaseDate(),
-                film.getDuration(),
-                film.getMpa().getId()
-        );
+        if (film.getDirectors() == null) {
+            film.setDirectors(List.of());
+        }
+
+        for (Director director : film.getDirectors()) {
+            if (!directorStorage.checkingId(director.getId())) {
+                throw new ValidationNotObjectException("Режиссёр с таким ID: " + director.getId() + " не найден");
+            }
+        }
+
+        long id = insert(INSERT_QUERY, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getMpa().getId());
 
         film.setId(id);
+
         saveGenres(film.getId(), film.getGenres());
+        saveDirectors(film.getId(), film.getDirectors());
+
         film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId()));
+
+        film.setDirectors(getFilmDirectors(film.getId()));
+
         film.setMpa(mpaStorage.getRatingById(film.getMpa().getId()));
+
         return film;
     }
 
@@ -96,9 +99,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public Film updateFilmStorage(Film updateFilm) {
         if (!mpaStorage.checkRatingId(updateFilm.getMpa().getId())) {
-            throw new ValidationNotObjectException(
-                    "Рейтинг с таким ID: " + updateFilm.getMpa().getId() + " не найден"
-            );
+            throw new ValidationNotObjectException("Рейтинг с таким ID: " + updateFilm.getMpa().getId() + " не найден");
         }
 
         genreStorage.deleteGenreByFilmId(updateFilm.getId());
@@ -107,15 +108,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             saveGenres(updateFilm.getId(), updateFilm.getGenres());
         }
 
-        update(
-                UPDATE_QUERY,
-                updateFilm.getName(),
-                updateFilm.getDescription(),
-                updateFilm.getReleaseDate(),
-                updateFilm.getDuration(),
-                updateFilm.getMpa().getId(),
-                updateFilm.getId()
-        );
+        update(UPDATE_QUERY, updateFilm.getName(), updateFilm.getDescription(), updateFilm.getReleaseDate(), updateFilm.getDuration(), updateFilm.getMpa().getId(), updateFilm.getId());
+
+        if (updateFilm.getDirectors() != null) {
+            jdbc.update(DELETE_FILM_DIRECTORS_QUERY, updateFilm.getId());
+
+            saveDirectors(updateFilm.getId(), updateFilm.getDirectors());
+        }
 
         return getFilmById(updateFilm.getId());
     }
@@ -123,15 +122,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> getFilmStorage() {
         List<Film> films = findAll(GET_ALL_QUERY);
-        films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
+
+        films.forEach(film -> {
+            film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId()));
+
+            film.setDirectors(getFilmDirectors(film.getId()));
+        });
+
         return films;
     }
 
     @Override
     public Film getFilmById(long filmId) {
-        Film film = findOne(GET_BY_ID_QUERY, filmId)
-                .orElseThrow(() -> new ValidationNotObjectException("Фильм с id: " + filmId + " не найден"));
+        Film film = findOne(GET_BY_ID_QUERY, filmId).orElseThrow(() -> new ValidationNotObjectException("Фильм с id: " + filmId + " не найден"));
+
         film.setGenres(genreStorage.getFilmIdGenreStorage(filmId));
+
+        film.setDirectors(getFilmDirectors(filmId));
+
         return film;
     }
 
@@ -159,7 +167,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> getTopFilms(long count) {
         List<Film> films = findAll(GET_TOP_QUERY, count);
-        films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
+
+        films.forEach(film -> {
+            film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId()));
+
+            film.setDirectors(getFilmDirectors(film.getId()));
+        });
+
         return films;
     }
 
@@ -178,9 +192,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
         genreStorage.deleteGenreByFilmId(filmId);
 
-        List<Long> uniqueGenreIds = genres.stream()
-                .map(Genre::getId)
-                .collect(Collectors.toList());
+        List<Long> uniqueGenreIds = genres.stream().map(Genre::getId).collect(Collectors.toList());
 
         for (Long genreId : uniqueGenreIds) {
             try {
@@ -199,6 +211,59 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private boolean checkLikeId(long filmId) {
         Integer count = jdbc.queryForObject(CHECK_LIKE_QUERY, Integer.class, filmId);
         return count != null && count != 0;
+    }
+
+    private void saveDirectors(Long filmId, List<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
+
+        for (Director director : directors) {
+            if (!directorStorage.checkingId(director.getId())) {
+                throw new ValidationNotObjectException("Режиссёр с id: " + director.getId() + " не найден");
+            }
+
+            try {
+                insertNotId(ADD_DIRECTOR_QUERY, filmId, director.getId());
+            } catch (DuplicateKeyException e) {
+                log.warn("Режиссёр с id: {} уже добавлен для фильма с id: {}", director.getId(), filmId);
+            }
+        }
+    }
+
+    private List<Director> getFilmDirectors(Long filmId) {
+        return jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> Director.builder().id(rs.getLong("director_id")).name(rs.getString("name")).build(), filmId);
+    }
+
+    @Override
+    public List<Film> getFilmsByDirector(long directorId, String sortBy) {
+        if (!directorStorage.checkingId(directorId)) {
+            throw new ValidationNotObjectException(
+                    "Режиссёр с id: " + directorId + " не найден"
+            );
+        }
+
+        String query;
+
+        if ("likes".equalsIgnoreCase(sortBy)) {
+            query = GET_FILMS_BY_DIRECTOR_LIKES_QUERY;
+        } else {
+            query = GET_FILMS_BY_DIRECTOR_YEAR_QUERY;
+        }
+
+        List<Film> films = findAll(query, directorId);
+
+        films.forEach(film -> {
+            film.setGenres(
+                    genreStorage.getFilmIdGenreStorage(film.getId())
+            );
+
+            film.setDirectors(
+                    getFilmDirectors(film.getId())
+            );
+        });
+
+        return films;
     }
 
     private void exceptionFilm(Film film) {

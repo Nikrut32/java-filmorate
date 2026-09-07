@@ -1,10 +1,12 @@
 DROP TABLE IF EXISTS liked_film;
 DROP TABLE IF EXISTS film_genres;
+DROP TABLE IF EXISTS film_directors;
 DROP TABLE IF EXISTS user_friends;
 DROP TABLE IF EXISTS films;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS genres;
 DROP TABLE IF EXISTS rating;
+DROP TABLE IF EXISTS directors;
 
 CREATE TABLE IF NOT EXISTS genres (
     genre_id INTEGER NOT NULL AUTO_INCREMENT,
@@ -17,6 +19,12 @@ CREATE TABLE IF NOT EXISTS rating (
     name_rating CHARACTER VARYING,
     CONSTRAINT CONSTRAINT_C PRIMARY KEY (rating_id)
 );
+
+CREATE TABLE IF NOT EXISTS directors (
+    director_id INTEGER NOT NULL AUTO_INCREMENT,
+    name CHARACTER VARYING NOT NULL,
+    CONSTRAINT directors_pk PRIMARY KEY (director_id)
+    );
 
 CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER NOT NULL AUTO_INCREMENT,
@@ -37,6 +45,19 @@ CREATE TABLE IF NOT EXISTS films (
     CONSTRAINT CONSTRAINT_5 PRIMARY KEY (film_id),
     CONSTRAINT CONSTRAINT_5C FOREIGN KEY (rating_id) REFERENCES rating(rating_id)
 );
+
+CREATE TABLE IF NOT EXISTS film_directors (
+    film_id INTEGER NOT NULL,
+    director_id INTEGER NOT NULL,
+    PRIMARY KEY (film_id, director_id),
+    CONSTRAINT film_directors_film_fk
+    FOREIGN KEY (film_id)
+    REFERENCES films(film_id)
+    ON DELETE CASCADE,
+    CONSTRAINT film_directors_director_fk
+    FOREIGN KEY (director_id)
+    REFERENCES directors(director_id)
+    );
 
 CREATE TABLE IF NOT EXISTS liked_film (
     film_id INTEGER NOT NULL,
