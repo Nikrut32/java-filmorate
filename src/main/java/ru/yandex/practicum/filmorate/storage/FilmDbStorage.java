@@ -134,7 +134,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public Film getFilmById(long filmId) {
-        Film film = findOne(GET_BY_ID_QUERY, filmId).orElseThrow(() -> new ValidationNotObjectException("Фильм с id: " + filmId + " не найден"));
+        Film film = findOne(GET_BY_ID_QUERY, filmId)
+                .orElseThrow(() -> new ValidationNotObjectException("Фильм с id: " + filmId + " не найден"));
 
         film.setGenres(genreStorage.getFilmIdGenreStorage(filmId));
 
