@@ -38,6 +38,12 @@ public class FilmController {
         return filmService.getTopFilms(count);
     }
 
+    @GetMapping("/search")
+    public List<Film> searchFilms(@RequestParam String query, @RequestParam String by) {
+        log.info("Получен запрос GET /films/search: query={}, by={}", query, by);
+        return filmService.searchFilms(query, by);
+    }
+
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable long id) {
         log.info("Получен запрос GET /films/{id}} с параметром id={}", id);
@@ -94,10 +100,7 @@ public class FilmController {
     }
 
     @GetMapping("/director/{directorId}")
-    public List<Film> getFilmsByDirector(
-            @PathVariable long directorId,
-            @RequestParam(defaultValue = "year") String sortBy
-    ) {
+    public List<Film> getFilmsByDirector(@PathVariable long directorId, @RequestParam(defaultValue = "year") String sortBy) {
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 

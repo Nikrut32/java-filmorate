@@ -26,4 +26,6 @@ public interface FilmStorage {
     void addGenreFilm(long filmId, long genreId);
 
     List<Film> getFilmsByDirector(long directorId, String sortBy);
+
+    List<Film> searchFilms(String query, String by);
 }

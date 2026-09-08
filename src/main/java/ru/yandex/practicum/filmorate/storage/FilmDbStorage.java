@@ -44,6 +44,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String DELETE_FILM_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
     private static final String GET_FILMS_BY_DIRECTOR_YEAR_QUERY = "SELECT fl.*, rt.name_rating " + "FROM films fl " + "LEFT JOIN rating rt ON fl.rating_id = rt.rating_id " + "JOIN film_directors fd ON fl.film_id = fd.film_id " + "WHERE fd.director_id = ? " + "ORDER BY fl.release_date ASC, fl.film_id ASC";
     private static final String GET_FILMS_BY_DIRECTOR_LIKES_QUERY = "SELECT fl.*, rt.name_rating, COUNT(lf.user_id) AS likes_count " + "FROM films fl " + "LEFT JOIN rating rt ON fl.rating_id = rt.rating_id " + "JOIN film_directors fd ON fl.film_id = fd.film_id " + "LEFT JOIN liked_film lf ON fl.film_id = lf.film_id " + "WHERE fd.director_id = ? " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, rt.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
+    private static final String SEARCH_BY_TITLE_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating, " + "COUNT(DISTINCT lf.user_id) AS likes_count " + "FROM films AS fl " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "LEFT JOIN liked_film AS lf ON fl.film_id = lf.film_id " + "WHERE LOWER(fl.name) LIKE LOWER(?) " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
+    private static final String SEARCH_BY_DIRECTOR_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating, " + "COUNT(DISTINCT lf.user_id) AS likes_count " + "FROM films AS fl " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "LEFT JOIN liked_film AS lf ON fl.film_id = lf.film_id " + "JOIN film_directors AS fd ON fl.film_id = fd.film_id " + "JOIN directors AS d ON fd.director_id = d.director_id " + "WHERE LOWER(d.name) LIKE LOWER(?) " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
+    private static final String SEARCH_BY_TITLE_AND_DIRECTOR_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating, " + "COUNT(DISTINCT lf.user_id) AS likes_count " + "FROM films AS fl " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "LEFT JOIN liked_film AS lf ON fl.film_id = lf.film_id " + "LEFT JOIN film_directors AS fd ON fl.film_id = fd.film_id " + "LEFT JOIN directors AS d ON fd.director_id = d.director_id " + "WHERE LOWER(fl.name) LIKE LOWER(?) " + "OR LOWER(d.name) LIKE LOWER(?) " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> rowMapper) {
         super(jdbc, rowMapper);
@@ -238,9 +241,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> getFilmsByDirector(long directorId, String sortBy) {
         if (!directorStorage.checkingId(directorId)) {
-            throw new ValidationNotObjectException(
-                    "Режиссёр с id: " + directorId + " не найден"
-            );
+            throw new ValidationNotObjectException("Режиссёр с id: " + directorId + " не найден");
         }
 
         String query;
@@ -254,13 +255,45 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         List<Film> films = findAll(query, directorId);
 
         films.forEach(film -> {
-            film.setGenres(
-                    genreStorage.getFilmIdGenreStorage(film.getId())
-            );
+            film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId()));
 
-            film.setDirectors(
-                    getFilmDirectors(film.getId())
-            );
+            film.setDirectors(getFilmDirectors(film.getId()));
+        });
+
+        return films;
+    }
+
+    @Override
+    public List<Film> searchFilms(String query, String by) {
+        String searchPattern = "%" + query.trim() + "%";
+
+        boolean byTitle = false;
+        boolean byDirector = false;
+
+        for (String type : by.split(",")) {
+            if ("title".equalsIgnoreCase(type.trim())) {
+                byTitle = true;
+            }
+
+            if ("director".equalsIgnoreCase(type.trim())) {
+                byDirector = true;
+            }
+        }
+
+        List<Film> films;
+
+        if (byTitle && byDirector) {
+            films = findAll(SEARCH_BY_TITLE_AND_DIRECTOR_QUERY, searchPattern, searchPattern);
+        } else if (byTitle) {
+            films = findAll(SEARCH_BY_TITLE_QUERY, searchPattern);
+        } else {
+            films = findAll(SEARCH_BY_DIRECTOR_QUERY, searchPattern);
+        }
+
+        films.forEach(film -> {
+            film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId()));
+
+            film.setDirectors(getFilmDirectors(film.getId()));
         });
 
         return films;

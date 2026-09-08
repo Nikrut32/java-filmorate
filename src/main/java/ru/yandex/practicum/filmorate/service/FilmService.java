@@ -73,6 +73,26 @@ public class FilmService {
         filmStorage.addGenreFilm(filmId, genreId);
     }
 
+    public List<Film> searchFilms(String query, String by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Поисковый запрос не может быть пустым");
+        }
+
+        if (by == null || by.isBlank()) {
+            throw new ValidationException("Параметр by не может быть пустым");
+        }
+
+        String[] searchTypes = by.split(",");
+
+        for (String type : searchTypes) {
+            if (!"title".equalsIgnoreCase(type.trim()) && !"director".equalsIgnoreCase(type.trim())) {
+                throw new ValidationException("Параметр by должен содержать title и/или director");
+            }
+        }
+
+        return filmStorage.searchFilms(query, by);
+    }
+
     public Film updateFilm(UpdateFilmRequest updateFilm) {
         Film film = filmStorage.getFilmById(updateFilm.getId());
         if (updateFilm.hasName()) {
