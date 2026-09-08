@@ -5,13 +5,13 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.util.List;
 
 public interface GenreStorage {
-    public boolean checkGenreId(long genreId);
+    boolean checkGenreId(long genreId);
 
-    public Genre getGenreById(long genreId);
+    Genre getGenreById(long genreId);
 
-    public List<Genre> getGenreStorage();
+    List<Genre> getGenreStorage();
 
-    public List<Genre> getFilmIdGenreStorage(long filmId);
+    List<Genre> getFilmIdGenreStorage(long filmId);
 
-    public void deleteGenreByFilmId(long filmId);
+    void deleteGenreByFilmId(long filmId);
 }

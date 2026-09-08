@@ -17,6 +17,9 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.*;
+import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
+import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.storage.DirectorDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FilmDbStorage.class, FilmRowMapper.class, UserDbStorage.class, UserRowMapper.class,
-        MpaRowMapper.class, GenreRowMapper.class, MpaDbStorage.class, GenreDbStorage.class})
+@Import({FilmDbStorage.class, FilmRowMapper.class, UserDbStorage.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class, MpaDbStorage.class, GenreDbStorage.class, DirectorDbStorage.class, DirectorRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmDbStorageTest {
 
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;
+    private final DirectorDbStorage directorDbStorage;
 
     @Test
     void addFilmStorageShouldCreateFilm() {
@@ -47,15 +50,92 @@ class FilmDbStorageTest {
     @Test
     void addFilmStorageWithGenresShouldSaveGenres() {
         Film film = createTestFilm();
-        film.setGenres(List.of(
-                Genre.builder().id(1L).build(),
-                Genre.builder().id(2L).build()
-        ));
+        film.setGenres(List.of(Genre.builder().id(1L).build(), Genre.builder().id(2L).build()));
 
         Film created = filmDbStorage.addFilmStorage(film);
 
         assertEquals(2, created.getGenres().size());
         assertTrue(created.getGenres().stream().anyMatch(g -> g.getId() == 1L));
+    }
+
+    @Test
+    void addFilmStorageWithDirectorShouldSaveDirector() {
+        Director director = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан").build());
+
+        Film film = createTestFilm();
+        film.setDirectors(List.of(Director.builder().id(director.getId()).build()));
+
+        Film created = filmDbStorage.addFilmStorage(film);
+
+        assertNotNull(created.getDirectors());
+        assertEquals(1, created.getDirectors().size());
+        assertEquals(director.getId(), created.getDirectors().getFirst().getId());
+        assertEquals("Кристофер Нолан", created.getDirectors().getFirst().getName());
+    }
+
+    @Test
+    void addFilmStorageWithSeveralDirectorsShouldSaveAllDirectors() {
+        Director director1 = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан").build());
+
+        Director director2 = directorDbStorage.addDirector(Director.builder().name("Стивен Спилберг").build());
+
+        Film film = createTestFilm();
+        film.setDirectors(List.of(Director.builder().id(director1.getId()).build(), Director.builder().id(director2.getId()).build()));
+
+        Film created = filmDbStorage.addFilmStorage(film);
+
+        assertEquals(2, created.getDirectors().size());
+
+        assertTrue(created.getDirectors().stream().anyMatch(d -> d.getId().equals(director1.getId())));
+
+        assertTrue(created.getDirectors().stream().anyMatch(d -> d.getId().equals(director2.getId())));
+    }
+
+    @Test
+    void addFilmStorageWithInvalidDirectorShouldThrowException() {
+        Film film = createTestFilm();
+
+        film.setDirectors(List.of(Director.builder().id(999L).build()));
+
+        assertThrows(ValidationNotObjectException.class, () -> filmDbStorage.addFilmStorage(film));
+    }
+
+    @Test
+    void getFilmByIdShouldReturnDirectors() {
+        Director director = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан").build());
+
+        Film film = createTestFilm();
+
+        film.setDirectors(List.of(Director.builder().id(director.getId()).build()));
+
+        Film created = filmDbStorage.addFilmStorage(film);
+
+        Film found = filmDbStorage.getFilmById(created.getId());
+
+        assertEquals(1, found.getDirectors().size());
+        assertEquals(director.getId(), found.getDirectors().getFirst().getId());
+        assertEquals("Кристофер Нолан", found.getDirectors().getFirst().getName());
+    }
+
+    @Test
+    void updateFilmStorageShouldUpdateDirectors() {
+        Director director1 = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан").build());
+
+        Director director2 = directorDbStorage.addDirector(Director.builder().name("Стивен Спилберг").build());
+
+        Film film = createTestFilm();
+
+        film.setDirectors(List.of(Director.builder().id(director1.getId()).build()));
+
+        Film created = filmDbStorage.addFilmStorage(film);
+
+        Film updatedFilm = Film.builder().id(created.getId()).name("Updated Film").description("Updated Description").releaseDate(LocalDate.of(2021, 2, 2)).duration(130L).mpa(Mpa.builder().id(2L).build()).genres(List.of()).directors(List.of(Director.builder().id(director2.getId()).build())).build();
+
+        Film updated = filmDbStorage.updateFilmStorage(updatedFilm);
+
+        assertEquals(1, updated.getDirectors().size());
+        assertEquals(director2.getId(), updated.getDirectors().getFirst().getId());
+        assertEquals("Стивен Спилберг", updated.getDirectors().getFirst().getName());
     }
 
     @Test
@@ -79,15 +159,7 @@ class FilmDbStorageTest {
         Film film = createTestFilm();
         Film created = filmDbStorage.addFilmStorage(film);
 
-        Film updatedFilm = Film.builder()
-                .id(created.getId())
-                .name("Updated Film")
-                .description("Updated Description")
-                .releaseDate(LocalDate.of(2021, 2, 2))
-                .duration(130L)
-                .mpa(Mpa.builder().id(2L).build())
-                .genres(List.of(Genre.builder().id(3L).build()))
-                .build();
+        Film updatedFilm = Film.builder().id(created.getId()).name("Updated Film").description("Updated Description").releaseDate(LocalDate.of(2021, 2, 2)).duration(130L).mpa(Mpa.builder().id(2L).build()).genres(List.of(Genre.builder().id(3L).build())).build();
 
         Film updated = filmDbStorage.updateFilmStorage(updatedFilm);
 
@@ -103,8 +175,7 @@ class FilmDbStorageTest {
 
         filmDbStorage.removeFilmStorage(created.getId());
 
-        assertThrows(ValidationNotObjectException.class,
-                () -> filmDbStorage.getFilmById(created.getId()));
+        assertThrows(ValidationNotObjectException.class, () -> filmDbStorage.getFilmById(created.getId()));
     }
 
     @Test
@@ -130,8 +201,7 @@ class FilmDbStorageTest {
 
     @Test
     void getFilmByIdNotFoundShouldThrowException() {
-        assertThrows(ValidationNotObjectException.class,
-                () -> filmDbStorage.getFilmById(999L));
+        assertThrows(ValidationNotObjectException.class, () -> filmDbStorage.getFilmById(999L));
     }
 
     @Test
@@ -152,7 +222,7 @@ class FilmDbStorageTest {
 
         List<Film> topFilms = filmDbStorage.getTopFilms(10);
         assertEquals(1, topFilms.size());
-        assertEquals(film.getId(), topFilms.get(0).getId());
+        assertEquals(film.getId(), topFilms.getFirst().getId());
     }
 
     @Test
@@ -192,7 +262,7 @@ class FilmDbStorageTest {
         List<Film> topFilms = filmDbStorage.getTopFilms(2);
 
         assertEquals(2, topFilms.size());
-        assertEquals(film1.getId(), topFilms.get(0).getId());
+        assertEquals(film1.getId(), topFilms.getFirst().getId());
     }
 
     @Test
@@ -217,40 +287,18 @@ class FilmDbStorageTest {
     }
 
     private Film createTestFilm() {
-        return Film.builder()
-                .name("Test Film")
-                .description("Test Description")
-                .releaseDate(LocalDate.of(2020, 1, 1))
-                .duration(120L)
-                .mpa(Mpa.builder().id(1L).build())
-                .build();
+        return Film.builder().name("Test Film").description("Test Description").releaseDate(LocalDate.of(2020, 1, 1)).duration(120L).mpa(Mpa.builder().id(1L).build()).build();
     }
 
     private Film createTestFilm2() {
-        return Film.builder()
-                .name("Test Film 2")
-                .description("Test Description 2")
-                .releaseDate(LocalDate.of(2021, 2, 2))
-                .duration(130L)
-                .mpa(Mpa.builder().id(2L).build())
-                .build();
+        return Film.builder().name("Test Film 2").description("Test Description 2").releaseDate(LocalDate.of(2021, 2, 2)).duration(130L).mpa(Mpa.builder().id(2L).build()).build();
     }
 
     private User createTestUser() {
-        return User.builder()
-                .email("test@mail.ru")
-                .login("testuser")
-                .name("Test User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build();
+        return User.builder().email("test@mail.ru").login("testuser").name("Test User").birthday(LocalDate.of(1990, 1, 1)).build();
     }
 
     private User createTestUser2() {
-        return User.builder()
-                .email("test2@mail.ru")
-                .login("testuser2")
-                .name("Test User 2")
-                .birthday(LocalDate.of(1992, 2, 2))
-                .build();
+        return User.builder().email("test2@mail.ru").login("testuser2").name("Test User 2").birthday(LocalDate.of(1992, 2, 2)).build();
     }
 }
