@@ -6,6 +6,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.mappers.LongRowMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -18,7 +19,10 @@ import java.util.Optional;
 public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStorage{
     @Autowired
     private UserStorage userStorage;
-    private RowMapper<Long> rowMapperLong;
+    @Autowired
+    private FilmStorage filmStorage;
+    @Autowired
+    private LongRowMapper rowMapperLong;
 
     private static final String INSERT_QUERY = "INSERT INTO reviews (film_id, user_id, content, is_positive) " +
             "VALUES (?, ?, ?, ?)";
@@ -26,15 +30,17 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
             ", is_positive = ? WHERE review_id = ?";
     private static final String GET_BY_ID_QUERY = "SELECT * FROM reviews WHERE review_id = ?";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM reviews WHERE review_id = ?";
-    private static final String GET_ALL_QUERY = "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
-    private static final String ADD_LIKE_QUERY = "INSERT INTO liked_reviews (review_id, user_id, is_helpful) " +
+    private static final String GET_ALL_FILM_ID_QUERY = "SELECT * FROM reviews WHERE film_id = ? " +
+            "ORDER BY useful DESC LIMIT ?";
+    private static final String GET_ALL_QUERY = "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
+    private static final String ADD_LIKE_QUERY = "INSERT INTO grade_reviews (review_id, user_id, is_helpful) " +
             "VALUES (?, ?, ?)";
-    private static final String DELETE_LIKE_QUERY = "DELETE FROM liked_reviews WHERE review_id = ? AND user_id = ?";
-    private static final String GET_COUNT_LIKE_QUERY = "SELECT COUNT(*) FROM liked_reviews " +
+    private static final String DELETE_LIKE_QUERY = "DELETE FROM grade_reviews WHERE review_id = ? AND user_id = ?";
+    private static final String GET_COUNT_LIKE_QUERY = "SELECT COUNT(*) FROM grade_reviews " +
             "WHERE is_helpful AND review_id = ?";
-    private static final String GET_COUNT_DISLIKE_QUERY = "SELECT COUNT(*) FROM liked_reviews " +
+    private static final String GET_COUNT_DISLIKE_QUERY = "SELECT COUNT(*) FROM grade_reviews " +
             "WHERE NOT is_helpful AND review_id = ?";
-    private static final String UPDATE_USEFUL_QUERY = "UPDATE reviews SET useful = ? WHERE review = ?";
+    private static final String UPDATE_USEFUL_QUERY = "UPDATE reviews SET useful = ? WHERE review_id = ?";
 
     public ReviewDbStorage(JdbcTemplate jdbc, RowMapper<Review> rowMapper) {
         super(jdbc, rowMapper);
@@ -47,6 +53,9 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
         if (!userStorage.checkingId(review.getUserId())) {
             throw new ValidationNotObjectException("Пользователь с таким ID: " + review.getUserId() + " не найден");
         }
+        if (!filmStorage.checkingId(review.getFilmId())) {
+            throw new ValidationNotObjectException("Фильм с таким ID: " + review.getFilmId() + " не найден");
+        }
 
         long id = insert(INSERT_QUERY,
                 review.getFilmId(),
@@ -55,6 +64,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.getIsPositive());
 
         review.setId(id);
+        review.setUseful(0L);
 
         return review;
     }
@@ -81,8 +91,15 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     }
 
     @Override
-    public List<Review> getReviewStorage(long film_id, long count) {
-        return findAll(GET_ALL_QUERY, film_id, count);
+    public List<Review> getReviewStorage(long filmId, long count) {
+        if (count <= 0) {
+            log.warn("Некорректное значение count={}", count);
+            throw new ValidationException("Количество отзывов не может быть ноль или меньше ноля");
+        }
+        if (filmId == 0) {
+            return findAll(GET_ALL_QUERY, count);
+        }
+        return findAll(GET_ALL_FILM_ID_QUERY, filmId, count);
     }
 
     @Override
@@ -92,20 +109,15 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     }
 
     @Override
-    public void addLikeOrDislikeReview(long userId, long reviewId, boolean grade) {
-        if (!userStorage.checkingId(userId)) {
-            throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
-        }
-
-        if (!checkingId(reviewId)) {
-            throw new ValidationNotObjectException("Отзыв с таким ID: " + reviewId + " не найден");
-        }
-        insert(ADD_LIKE_QUERY, reviewId, userId, grade);
+    public void addLikeOrDislikeReview(long reviewId, long userId, boolean grade) {
+        insertNotId(ADD_LIKE_QUERY, reviewId, userId, grade);
+        updateUsefulReview(reviewId);
     }
 
     @Override
-    public void removeLikeOrDislikeReview(long userId, long reviewId) {
+    public void removeLikeOrDislikeReview(long reviewId, long userId) {
         delete((checkingId(reviewId) && userStorage.checkingId(userId)), DELETE_LIKE_QUERY, reviewId, userId);
+        updateUsefulReview(reviewId);
     }
 
     @Override

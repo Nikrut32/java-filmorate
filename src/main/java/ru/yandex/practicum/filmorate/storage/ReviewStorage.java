@@ -15,9 +15,9 @@ public interface ReviewStorage {
 
     Review getReviewById(long reviewId);
 
-    void addLikeOrDislikeReview(long userId, long reviewId, boolean grade);
+    void addLikeOrDislikeReview(long reviewId, long userId, boolean grade);
 
-    void removeLikeOrDislikeReview(long userId, long reviewId);
+    void removeLikeOrDislikeReview(long reviewId, long userId);
 
     void updateUsefulReview(long reviewId);
 

@@ -9,7 +9,6 @@ public class UpdateReviewRequest {
     private Boolean isPositive;
     private Long filmId;
     private Long userId;
-    private Long useful;
 
     public boolean hasContent() { return !(content == null || content.isBlank()); }
 
@@ -18,6 +17,4 @@ public class UpdateReviewRequest {
     public boolean hasFilmId() { return !(filmId == null); }
 
     public boolean hasUserId() { return !(userId == null); }
-
-    public boolean hasUseful() { return !(useful == null); }
 }
