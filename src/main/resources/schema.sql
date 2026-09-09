@@ -1,15 +1,3 @@
-DROP TABLE IF EXISTS liked_film;
-DROP TABLE IF EXISTS film_genres;
-DROP TABLE IF EXISTS grade_reviews;
-DROP TABLE IF EXISTS reviews;
-DROP TABLE IF EXISTS film_directors;
-DROP TABLE IF EXISTS user_friends;
-DROP TABLE IF EXISTS films;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS genres;
-DROP TABLE IF EXISTS rating;
-DROP TABLE IF EXISTS directors;
-
 CREATE TABLE IF NOT EXISTS genres (
     genre_id INTEGER NOT NULL AUTO_INCREMENT,
     name CHARACTER VARYING,
@@ -102,7 +90,7 @@ CREATE TABLE IF NOT EXISTS grade_reviews (
     review_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     is_helpful BOOLEAN NOT NULL,
-    PRIMARY KEY (review_id, user_id, is_helpful),
+    PRIMARY KEY (review_id, user_id),
     CONSTRAINT CONSTRAINT_LR FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
     CONSTRAINT CONSTRAINT_LR9 FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );

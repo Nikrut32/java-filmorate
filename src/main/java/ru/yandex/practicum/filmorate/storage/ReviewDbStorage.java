@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -110,8 +111,13 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public void addLikeOrDislikeReview(long reviewId, long userId, boolean grade) {
-        insertNotId(ADD_LIKE_QUERY, reviewId, userId, grade);
-        updateUsefulReview(reviewId);
+        try {
+            insertNotId(ADD_LIKE_QUERY, reviewId, userId, grade);
+            updateUsefulReview(reviewId);
+        } catch (DuplicateKeyException ignored) {
+            removeLikeOrDislikeReview(reviewId, userId);
+            addLikeOrDislikeReview(reviewId, userId, grade);
+        }
     }
 
     @Override

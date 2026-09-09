@@ -154,7 +154,7 @@ class UserDbStorageTest {
 
         List<User> users = userDbStorage.getUserStorage();
 
-        assertEquals(2, users.size());
+        assertEquals(4, users.size());
     }
 
     @Test

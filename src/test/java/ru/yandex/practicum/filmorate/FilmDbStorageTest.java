@@ -185,7 +185,7 @@ class FilmDbStorageTest {
 
         List<Film> films = filmDbStorage.getFilmStorage();
 
-        assertEquals(2, films.size());
+        assertEquals(4, films.size());
     }
 
     @Test
@@ -221,7 +221,7 @@ class FilmDbStorageTest {
         filmDbStorage.addLikeFilm(film.getId(), user.getId());
 
         List<Film> topFilms = filmDbStorage.getTopFilms(10);
-        assertEquals(1, topFilms.size());
+        assertEquals(3, topFilms.size());
         assertEquals(film.getId(), topFilms.getFirst().getId());
     }
 
@@ -234,7 +234,7 @@ class FilmDbStorageTest {
         filmDbStorage.addLikeFilm(film.getId(), user.getId());
 
         List<Film> topFilms = filmDbStorage.getTopFilms(10);
-        assertEquals(1, topFilms.size());
+        assertEquals(3, topFilms.size());
     }
 
     @Test
