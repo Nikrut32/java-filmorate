@@ -29,6 +29,12 @@ public class ReviewController {
         return reviewStorage.getReviewStorage(filmId, count);
     }
 
+    @GetMapping("{id}")
+    public Review getReviewById(@PathVariable long id) {
+        log.info("Получен запрос GET /reviews/{id}} с параметром id={}", id);
+        return reviewStorage.getReviewById(id);
+    }
+
     @PostMapping
     public Review createReview(@RequestBody Review review) {
         log.info("Получен запрос POST /reviews на добавление отзыва: {}", review);
