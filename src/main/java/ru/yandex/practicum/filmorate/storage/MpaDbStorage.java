@@ -26,8 +26,7 @@ public class MpaDbStorage extends BaseDbStorage<Mpa> implements MpaStorage {
 
     @Override
     public Mpa getRatingById(long ratingId) {
-        return findOne(GET_BY_ID_QUERY, ratingId)
-                .orElseThrow(() -> new ValidationNotObjectException("Рейтинга с таким id не существует"));
+        return findOne(GET_BY_ID_QUERY, ratingId).orElseThrow(() -> new ValidationNotObjectException("Рейтинга с таким id не существует"));
     }
 
     @Override
