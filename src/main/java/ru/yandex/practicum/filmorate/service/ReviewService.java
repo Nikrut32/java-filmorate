@@ -45,7 +45,7 @@ public class ReviewService {
     }
 
     public Review updateReview(UpdateReviewRequest updateReview) {
-        Review review = reviewStorage.getReviewById(updateReview.getId());
+        Review review = reviewStorage.getReviewById(updateReview.getReviewId());
         if (updateReview.hasContent()) {
             review.setContent(updateReview.getContent());
         }
