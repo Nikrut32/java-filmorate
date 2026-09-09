@@ -46,7 +46,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
     private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
-
     private static final String GET_COMMON_FILMS_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " +
             "fl.duration, fl.rating_id, r.name_rating, " +
             "COUNT(lf.user_id) AS likes_count " +
