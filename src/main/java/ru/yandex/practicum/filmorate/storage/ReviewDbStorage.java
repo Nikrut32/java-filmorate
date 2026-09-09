@@ -64,7 +64,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.getContent(),
                 review.getIsPositive());
 
-        review.setId(id);
+        review.setReviewId(id);
         review.setUseful(0L);
 
         return review;
@@ -81,9 +81,9 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 updateReview.getUserId(),
                 updateReview.getContent(),
                 updateReview.getIsPositive(),
-                updateReview.getId());
+                updateReview.getReviewId());
 
-        return getReviewById(updateReview.getId());
+        return getReviewById(updateReview.getReviewId());
     }
 
     @Override

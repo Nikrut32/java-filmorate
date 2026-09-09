@@ -31,7 +31,7 @@ public class ReviewDbStorageTest {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
 
         assertThat(savedReview).isNotNull();
-        assertThat(savedReview.getId()).isPositive();
+        assertThat(savedReview.getReviewId()).isPositive();
         assertThat(savedReview.getUseful()).isEqualTo(0L);
     }
 
@@ -67,14 +67,14 @@ public class ReviewDbStorageTest {
     @Test
     void removeReviewExistsDeletesTest() {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
-        reviewDbStorage.removeReview(savedReview.getId());
-        assertThat(reviewDbStorage.checkingId(savedReview.getId())).isFalse();
+        reviewDbStorage.removeReview(savedReview.getReviewId());
+        assertThat(reviewDbStorage.checkingId(savedReview.getReviewId())).isFalse();
     }
 
     @Test
     void getReviewByIdExistsReturnsTest() {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
-        Review foundReview = reviewDbStorage.getReviewById(savedReview.getId());
+        Review foundReview = reviewDbStorage.getReviewById(savedReview.getReviewId());
         assertThat(foundReview).isNotNull();
     }
 
@@ -106,22 +106,22 @@ public class ReviewDbStorageTest {
     void updateReviewUsefulTest() {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
 
-        reviewDbStorage.addLikeOrDislikeReview(savedReview.getId(), 1L, true);
-        Review updatedReview = reviewDbStorage.getReviewById(savedReview.getId());
+        reviewDbStorage.addLikeOrDislikeReview(savedReview.getReviewId(), 1L, true);
+        Review updatedReview = reviewDbStorage.getReviewById(savedReview.getReviewId());
         assertThat(updatedReview.getUseful()).isEqualTo(1L);
 
-        reviewDbStorage.addLikeOrDislikeReview(savedReview.getId(), 1L, false);
-        updatedReview = reviewDbStorage.getReviewById(savedReview.getId());
+        reviewDbStorage.addLikeOrDislikeReview(savedReview.getReviewId(), 1L, false);
+        updatedReview = reviewDbStorage.getReviewById(savedReview.getReviewId());
         assertThat(updatedReview.getUseful()).isEqualTo(-1L);
     }
 
     @Test
     void removeReviewGradeTest() {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
-        reviewDbStorage.addLikeOrDislikeReview(savedReview.getId(), 1L, true);
-        reviewDbStorage.removeLikeOrDislikeReview(savedReview.getId(), 1L);
+        reviewDbStorage.addLikeOrDislikeReview(savedReview.getReviewId(), 1L, true);
+        reviewDbStorage.removeLikeOrDislikeReview(savedReview.getReviewId(), 1L);
 
-        Review updatedReview = reviewDbStorage.getReviewById(savedReview.getId());
+        Review updatedReview = reviewDbStorage.getReviewById(savedReview.getReviewId());
         assertThat(updatedReview.getUseful()).isEqualTo(0L);
     }
 

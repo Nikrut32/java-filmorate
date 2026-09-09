@@ -33,7 +33,7 @@ public class ReviewController {
     public Review createReview(@RequestBody Review review) {
         log.info("Получен запрос POST /reviews на добавление отзыва: {}", review);
         Review createReview = reviewStorage.addReview(review);
-        log.info("Отзыв успешно создан с id={}", createReview.getId());
+        log.info("Отзыв успешно создан с id={}", createReview.getReviewId());
         return createReview;
     }
 
@@ -41,7 +41,7 @@ public class ReviewController {
     public Review updateReview(@RequestBody UpdateReviewRequest review) {
         log.info("Получен запрос PUT /reviews на обновление фильма: {}", review);
         Review updateReview = reviewService.updateReview(review);
-        log.info("Отзыв с id={} успешно обновлен.", updateReview.getId());
+        log.info("Отзыв с id={} успешно обновлен.", updateReview.getReviewId());
         return updateReview;
     }
 
