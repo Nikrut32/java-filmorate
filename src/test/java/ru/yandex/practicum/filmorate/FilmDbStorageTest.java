@@ -286,6 +286,102 @@ class FilmDbStorageTest {
         assertEquals(2, found.getGenres().size());
     }
 
+    @Test
+    void searchFilmsByTitleShouldReturnMatchingFilms() {
+        Film film1 = createTestFilm();
+        film1.setName("The Dark Knight");
+
+        Film film2 = createTestFilm2();
+        film2.setName("Interstellar");
+
+        filmDbStorage.addFilmStorage(film1);
+        filmDbStorage.addFilmStorage(film2);
+
+        List<Film> films = filmDbStorage.searchFilms("dark", "title");
+
+        assertEquals(1, films.size());
+        assertEquals("The Dark Knight", films.getFirst().getName());
+    }
+
+    @Test
+    void searchFilmsByDirectorShouldReturnMatchingFilms() {
+        Director director = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан").build());
+
+        Film film = createTestFilm();
+        film.setName("The Dark Knight");
+        film.setDirectors(List.of(Director.builder().id(director.getId()).build()));
+
+        filmDbStorage.addFilmStorage(film);
+
+        List<Film> films = filmDbStorage.searchFilms("нолан", "director");
+
+        assertEquals(1, films.size());
+        assertEquals("The Dark Knight", films.getFirst().getName());
+
+        assertEquals(1, films.getFirst().getDirectors().size());
+        assertEquals("Кристофер Нолан", films.getFirst().getDirectors().getFirst().getName());
+    }
+
+    @Test
+    void searchFilmsByTitleAndDirectorShouldReturnMatchingFilms() {
+        Director nolan = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан").build());
+
+        Film matchingFilm = createTestFilm();
+        matchingFilm.setName("The Dark Knight");
+        matchingFilm.setDirectors(List.of(Director.builder().id(nolan.getId()).build()));
+
+        Film anotherFilm = createTestFilm2();
+        anotherFilm.setName("Interstellar");
+
+        filmDbStorage.addFilmStorage(matchingFilm);
+        filmDbStorage.addFilmStorage(anotherFilm);
+
+        List<Film> films = filmDbStorage.searchFilms("нолан", "title,director");
+
+        assertEquals(1, films.size());
+        assertEquals("The Dark Knight", films.getFirst().getName());
+    }
+
+    @Test
+    void searchFilmsShouldBeCaseInsensitive() {
+        Film film = createTestFilm();
+        film.setName("The Dark Knight");
+
+        filmDbStorage.addFilmStorage(film);
+
+        List<Film> films = filmDbStorage.searchFilms("DARK KNIGHT", "title");
+
+        assertEquals(1, films.size());
+        assertEquals("The Dark Knight", films.getFirst().getName());
+    }
+
+    @Test
+    void searchFilmsShouldReturnEmptyListWhenNothingFound() {
+        filmDbStorage.addFilmStorage(createTestFilm());
+
+        List<Film> films = filmDbStorage.searchFilms("Harry Potter", "title");
+
+        assertTrue(films.isEmpty());
+    }
+
+    @Test
+    void searchFilmsByDirectorShouldNotReturnDuplicates() {
+        Director director1 = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан").build());
+
+        Director director2 = directorDbStorage.addDirector(Director.builder().name("Кристофер Нолан мл.").build());
+
+        Film film = createTestFilm();
+        film.setName("Test Film With Directors");
+        film.setDirectors(List.of(Director.builder().id(director1.getId()).build(), Director.builder().id(director2.getId()).build()));
+
+        filmDbStorage.addFilmStorage(film);
+
+        List<Film> films = filmDbStorage.searchFilms("кристофер", "director");
+
+        assertEquals(1, films.size());
+        assertEquals("Test Film With Directors", films.getFirst().getName());
+    }
+
     private Film createTestFilm() {
         return Film.builder().name("Test Film").description("Test Description").releaseDate(LocalDate.of(2020, 1, 1)).duration(120L).mpa(Mpa.builder().id(1L).build()).build();
     }

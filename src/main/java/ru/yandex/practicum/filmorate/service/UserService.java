@@ -73,7 +73,7 @@ public class UserService {
         if (updateUser.hasEmail()) {
             user.setEmail(updateUser.getEmail());
         }
-        if  (updateUser.hasBirthday()) {
+        if (updateUser.hasBirthday()) {
             user.setBirthday(updateUser.getBirthday());
         }
         if (updateUser.hasLogin()) {

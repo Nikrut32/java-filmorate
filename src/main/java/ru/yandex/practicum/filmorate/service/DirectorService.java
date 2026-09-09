@@ -24,9 +24,7 @@ public class DirectorService {
         validateDirector(director);
 
         if (!directorStorage.checkingId(director.getId())) {   // ← вот здесь был error
-            throw new ValidationNotObjectException(
-                    "Режиссёр с id: " + director.getId() + " не найден"
-            );
+            throw new ValidationNotObjectException("Режиссёр с id: " + director.getId() + " не найден");
         }
 
         return directorStorage.updateDirector(director);
@@ -46,9 +44,7 @@ public class DirectorService {
 
     private void validateDirector(Director director) {
         if (director.getName() == null || director.getName().isBlank()) {
-            throw new ValidationException(
-                    "Имя режиссёра не может быть пустым"
-            );
+            throw new ValidationException("Имя режиссёра не может быть пустым");
         }
     }
 }

@@ -12,9 +12,6 @@ public class DirectorRowMapper implements RowMapper<Director> {
 
     @Override
     public Director mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return Director.builder()
-                .id(rs.getLong("director_id"))
-                .name(rs.getString("name"))
-                .build();
+        return Director.builder().id(rs.getLong("director_id")).name(rs.getString("name")).build();
     }
 }
