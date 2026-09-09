@@ -10,11 +10,19 @@ public class UpdateReviewRequest {
     private Long filmId;
     private Long userId;
 
-    public boolean hasContent() { return !(content == null || content.isBlank()); }
+    public boolean hasContent() {
+        return !(content == null || content.isBlank());
+    }
 
-    public boolean hasIsPositive() { return !(isPositive == null); }
+    public boolean hasIsPositive() {
+        return !(isPositive == null);
+    }
 
-    public boolean hasFilmId() { return !(filmId == null); }
+    public boolean hasFilmId() {
+        return !(filmId == null);
+    }
 
-    public boolean hasUserId() { return !(userId == null); }
+    public boolean hasUserId() {
+        return !(userId == null);
+    }
 }

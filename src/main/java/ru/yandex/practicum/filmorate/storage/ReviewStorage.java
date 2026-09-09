@@ -11,7 +11,7 @@ public interface ReviewStorage {
 
     void removeReview(long reviewId);
 
-    List<Review> getReviewStorage(long film_id, long count);
+    List<Review> getReviewStorage(long filmId, long count);
 
     Review getReviewById(long reviewId);
 

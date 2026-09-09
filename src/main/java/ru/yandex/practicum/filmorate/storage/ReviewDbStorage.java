@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @Slf4j
 @Repository
-public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStorage{
+public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStorage {
     @Autowired
     private UserStorage userStorage;
     @Autowired
