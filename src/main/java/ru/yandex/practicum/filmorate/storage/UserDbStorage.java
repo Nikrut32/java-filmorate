@@ -141,6 +141,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     private List<Long> coincidencesUsersId(long userRecId) {
         Set<Long> filmsIdUserSet = new HashSet<>(filmsIdLikedByUser(userRecId));
+        if (filmsIdUserSet.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         List<Long> usersIds = jdbc.query(GET_ALL_USERS_ID, rowMapperLong);
         long max = -1;
@@ -157,6 +160,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             } else if (count == max) {
                 result.add(userId);
             }
+        }
+        if (max == 0) {
+            return new ArrayList<>();
         }
         return result;
     }

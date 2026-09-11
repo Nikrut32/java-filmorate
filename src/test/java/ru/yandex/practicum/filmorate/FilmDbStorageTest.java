@@ -399,7 +399,7 @@ class FilmDbStorageTest {
         List<Film> recommendations = filmDbStorage.getFilmsRecommendation(3);
 
         assertNotNull(recommendations);
-        assertEquals(2, recommendations.size());
+        assertEquals(0, recommendations.size());
     }
 
     @Test
