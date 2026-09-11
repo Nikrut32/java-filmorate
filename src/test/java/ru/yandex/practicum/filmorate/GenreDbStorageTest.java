@@ -6,18 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
-import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
+import ru.yandex.practicum.filmorate.dal.mappers.*;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.MpaDbStorage;
-import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
-import ru.yandex.practicum.filmorate.storage.DirectorDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({FilmDbStorage.class, FilmRowMapper.class, GenreDbStorage.class, GenreRowMapper.class,
-        MpaRowMapper.class, MpaDbStorage.class, DirectorDbStorage.class, DirectorRowMapper.class})
+        MpaRowMapper.class, MpaDbStorage.class, DirectorDbStorage.class, DirectorRowMapper.class, LongRowMapper.class,
+        UserDbStorage.class, UserRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class GenreDbStorageTest {
 

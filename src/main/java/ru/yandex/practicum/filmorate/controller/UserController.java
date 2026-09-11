@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.model.AnswerString;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
@@ -21,6 +23,7 @@ public class UserController {
 
     private final UserStorage userStorage;
     private final UserService userService;
+    private final FilmStorage filmStorage;
 
     @GetMapping
     public List<User> getUsers() {
@@ -47,6 +50,12 @@ public class UserController {
     public User getUserById(@PathVariable long id) {
         log.info("Получен запрос GET /users/{id}} с параметром id={}", id);
         return userStorage.getUserById(id);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> getRecommendations(@PathVariable long id) {
+        log.info("Получен запрос GET /users/{id}/recommendations} с параметром id={}", id);
+        return filmStorage.getFilmsRecommendation(id);
     }
 
     @PostMapping
