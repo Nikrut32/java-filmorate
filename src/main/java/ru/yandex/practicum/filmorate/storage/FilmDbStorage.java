@@ -26,6 +26,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private GenreStorage genreStorage;
     @Autowired
     private DirectorStorage directorStorage;
+    @Autowired
+    private UserStorage userStorage;
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, rating_id) " + "VALUES (?, ?, ?, ?, ?)";
     private static final String GET_BY_NAME_QUERY = "SELECT fl.*, rt.name_rating FROM films AS fl " + "LEFT JOIN rating AS rt ON fl.rating_id = rt.rating_id WHERE fl.name = ?";
@@ -38,7 +40,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String GET_TOP_QUERY = "SELECT fl.film_id, name, description, release_date, " + "duration, fl.rating_id, r.name_rating, COUNT(lf.user_id) AS likes_count " + "FROM liked_film AS lf " + "RIGHT JOIN films AS fl ON lf.film_id = fl.film_id " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
     private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
-
     private static final String ADD_DIRECTOR_QUERY = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
     private static final String GET_FILM_DIRECTORS_QUERY = "SELECT d.director_id, d.name " + "FROM film_directors fd " + "JOIN directors d ON fd.director_id = d.director_id " + "WHERE fd.film_id = ?";
     private static final String DELETE_FILM_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
@@ -186,59 +187,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         insertNotId(ADD_GENRE_QUERY, filmId, genreId);
     }
 
-    public Optional<Film> getFilmByIdTest(String query, long filmId) {
-        return findOne(query, filmId);
-    }
-
-    private void saveGenres(Long filmId, List<Genre> genres) {
-        if (genres == null || genres.isEmpty()) {
-            return;
-        }
-        genreStorage.deleteGenreByFilmId(filmId);
-
-        List<Long> uniqueGenreIds = genres.stream().map(Genre::getId).collect(Collectors.toList());
-
-        for (Long genreId : uniqueGenreIds) {
-            try {
-                insertNotId(ADD_GENRE_QUERY, filmId, genreId);
-            } catch (DuplicateKeyException e) {
-                log.warn("Жанр с id: {} уже добавлен для фильма с id: {}", genreId, filmId);
-            }
-        }
-    }
-
-    private boolean checkName(String name) {
-        Optional<Film> film = findOne(GET_BY_NAME_QUERY, name);
-        return film.isPresent();
-    }
-
-    private boolean checkLikeId(long filmId) {
-        Integer count = jdbc.queryForObject(CHECK_LIKE_QUERY, Integer.class, filmId);
-        return count != null && count != 0;
-    }
-
-    private void saveDirectors(Long filmId, List<Director> directors) {
-        if (directors == null || directors.isEmpty()) {
-            return;
-        }
-
-        for (Director director : directors) {
-            if (!directorStorage.checkingId(director.getId())) {
-                throw new ValidationNotObjectException("Режиссёр с id: " + director.getId() + " не найден");
-            }
-
-            try {
-                insertNotId(ADD_DIRECTOR_QUERY, filmId, director.getId());
-            } catch (DuplicateKeyException e) {
-                log.warn("Режиссёр с id: {} уже добавлен для фильма с id: {}", director.getId(), filmId);
-            }
-        }
-    }
-
-    private List<Director> getFilmDirectors(Long filmId) {
-        return jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> Director.builder().id(rs.getLong("director_id")).name(rs.getString("name")).build(), filmId);
-    }
-
     @Override
     public List<Film> getFilmsByDirector(long directorId, String sortBy) {
         if (!directorStorage.checkingId(directorId)) {
@@ -298,6 +246,66 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         });
 
         return films;
+    }
+
+    @Override
+    public List<Film> getFilmsRecommendation(long userId) {
+        return userStorage.recommendationsFilmsId(userId).stream()
+                .map(this::getFilmById)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<Film> getFilmByIdTest(String query, long filmId) {
+        return findOne(query, filmId);
+    }
+
+    private void saveGenres(Long filmId, List<Genre> genres) {
+        if (genres == null || genres.isEmpty()) {
+            return;
+        }
+        genreStorage.deleteGenreByFilmId(filmId);
+
+        List<Long> uniqueGenreIds = genres.stream().map(Genre::getId).collect(Collectors.toList());
+
+        for (Long genreId : uniqueGenreIds) {
+            try {
+                insertNotId(ADD_GENRE_QUERY, filmId, genreId);
+            } catch (DuplicateKeyException e) {
+                log.warn("Жанр с id: {} уже добавлен для фильма с id: {}", genreId, filmId);
+            }
+        }
+    }
+
+    private boolean checkName(String name) {
+        Optional<Film> film = findOne(GET_BY_NAME_QUERY, name);
+        return film.isPresent();
+    }
+
+    private boolean checkLikeId(long filmId) {
+        Integer count = jdbc.queryForObject(CHECK_LIKE_QUERY, Integer.class, filmId);
+        return count != null && count != 0;
+    }
+
+    private void saveDirectors(Long filmId, List<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
+
+        for (Director director : directors) {
+            if (!directorStorage.checkingId(director.getId())) {
+                throw new ValidationNotObjectException("Режиссёр с id: " + director.getId() + " не найден");
+            }
+
+            try {
+                insertNotId(ADD_DIRECTOR_QUERY, filmId, director.getId());
+            } catch (DuplicateKeyException e) {
+                log.warn("Режиссёр с id: {} уже добавлен для фильма с id: {}", director.getId(), filmId);
+            }
+        }
+    }
+
+    private List<Director> getFilmDirectors(Long filmId) {
+        return jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> Director.builder().id(rs.getLong("director_id")).name(rs.getString("name")).build(), filmId);
     }
 
     private void exceptionFilm(Film film) {

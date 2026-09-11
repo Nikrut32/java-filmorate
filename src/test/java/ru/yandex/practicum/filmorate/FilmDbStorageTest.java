@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
-import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.dal.mappers.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -17,7 +14,6 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.*;
-import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.DirectorDbStorage;
 
@@ -28,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FilmDbStorage.class, FilmRowMapper.class, UserDbStorage.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class, MpaDbStorage.class, GenreDbStorage.class, DirectorDbStorage.class, DirectorRowMapper.class})
+@Import({FilmDbStorage.class, FilmRowMapper.class, UserDbStorage.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class, MpaDbStorage.class, GenreDbStorage.class, DirectorDbStorage.class, DirectorRowMapper.class, LongRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmDbStorageTest {
 
@@ -185,7 +181,7 @@ class FilmDbStorageTest {
 
         List<Film> films = filmDbStorage.getFilmStorage();
 
-        assertEquals(4, films.size());
+        assertEquals(5, films.size());
     }
 
     @Test
@@ -221,7 +217,7 @@ class FilmDbStorageTest {
         filmDbStorage.addLikeFilm(film.getId(), user.getId());
 
         List<Film> topFilms = filmDbStorage.getTopFilms(10);
-        assertEquals(3, topFilms.size());
+        assertEquals(4, topFilms.size());
         assertEquals(film.getId(), topFilms.getFirst().getId());
     }
 
@@ -234,7 +230,7 @@ class FilmDbStorageTest {
         filmDbStorage.addLikeFilm(film.getId(), user.getId());
 
         List<Film> topFilms = filmDbStorage.getTopFilms(10);
-        assertEquals(3, topFilms.size());
+        assertEquals(4, topFilms.size());
     }
 
     @Test
@@ -380,6 +376,38 @@ class FilmDbStorageTest {
 
         assertEquals(1, films.size());
         assertEquals("Test Film With Directors", films.getFirst().getName());
+    }
+
+    @Test
+    void getFilmsRecommendationTest() {
+        filmDbStorage.addLikeFilm(1, 1);
+        filmDbStorage.addLikeFilm(3, 1);
+        filmDbStorage.addLikeFilm(2, 2);
+        filmDbStorage.addLikeFilm(1, 3);
+        List<Film> recommendations = filmDbStorage.getFilmsRecommendation(3);
+
+        assertNotNull(recommendations);
+        assertEquals(1, recommendations.size());
+        assertEquals(3, recommendations.get(0).getId());
+        assertEquals("Начало", recommendations.get(0).getName());
+    }
+
+    @Test
+    void getFilmsRecommendationNotLikedRecUserTest() {
+        filmDbStorage.addLikeFilm(1, 1);
+        filmDbStorage.addLikeFilm(2, 2);
+        List<Film> recommendations = filmDbStorage.getFilmsRecommendation(3);
+
+        assertNotNull(recommendations);
+        assertEquals(2, recommendations.size());
+    }
+
+    @Test
+    void getFilmsRecommendationNotLikedFilmsTest() {
+        List<Film> recommendations = filmDbStorage.getFilmsRecommendation(3);
+
+        assertNotNull(recommendations);
+        assertEquals(0, recommendations.size());
     }
 
     private Film createTestFilm() {

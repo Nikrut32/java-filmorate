@@ -10,3 +10,4 @@ MERGE INTO rating KEY (rating_id, name_rating) VALUES (2, 'PG');
 MERGE INTO rating KEY (rating_id, name_rating) VALUES (3, 'PG-13');
 MERGE INTO rating KEY (rating_id, name_rating) VALUES (4, 'R');
 MERGE INTO rating KEY (rating_id, name_rating) VALUES (5, 'NC-17');
+

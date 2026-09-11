@@ -1,20 +1,25 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.mappers.LongRowMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
+    @Autowired
+    private LongRowMapper rowMapperLong;
+
     private static final String INSERT_QUERY = "INSERT INTO users (email, " + "login, name, birthday) VALUES (?, ?, ?, ?)";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE user_id = ?";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, " + "name = ?, birthday = ? WHERE user_id = ?";
@@ -28,6 +33,8 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String GET_ALL_FRIENDS_QUERY = "SELECT us.user_id, us.email, us.login, us.name, us.birthday " + "FROM user_friends AS uf JOIN users AS us ON uf.friend_id=us.user_id WHERE uf.user_id = ?";
     private static final String GET_COMMON_FRIENDS_QUERY = "SELECT DISTINCT uf1.friend_id, us.user_id, " + "us.email, us.login, us.name, us.birthday " + "FROM user_friends uf1 JOIN user_friends uf2 ON uf1.friend_id = uf2.friend_id " + "JOIN users us ON uf1.friend_id = us.user_id WHERE uf1.user_id = ? AND uf2.user_id = ?";
     private static final String CHECK_FRIEND_BY_ID_QUERY = "SELECT COUNT(*) FROM user_friends " + "WHERE user_id = ? AND friend_id = ?";
+    private static final String GET_ID_FILM_LIKED_BY_USER = "SELECT film_id FROM liked_film WHERE user_id = ?";
+    private static final String GET_ALL_USERS_ID = "SELECT user_id FROM users";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> rowMapper) {
         super(jdbc, rowMapper);
@@ -94,6 +101,22 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         return findAll(GET_COMMON_FRIENDS_QUERY, userId, otherId);
     }
 
+    @Override
+    public List<Long> recommendationsFilmsId(long userRecId) {
+        List<Long> coincidencesUsersId = coincidencesUsersId(userRecId);
+        Set<Long> filmsIdUserSet = new HashSet<>();
+
+        for (Long userId : coincidencesUsersId) {
+            List<Long> filmsId = filmsIdLikedByUser(userId);
+            filmsIdUserSet.addAll(filmsId);
+        }
+
+        Set<Long> alreadyLiked = new HashSet<>(filmsIdLikedByUser(userRecId));
+        filmsIdUserSet.removeAll(alreadyLiked); // исключаем уже просмотренное
+
+        return new ArrayList<>(filmsIdUserSet);
+    }
+
     private boolean checkEmail(String email) {
         Optional<User> user = findOne(GET_BY_EMAIL_QUERY, email);
         return user.isPresent();
@@ -111,6 +134,32 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private boolean checkFriendById(long userId, long friendId) {
         Integer count = jdbc.queryForObject(CHECK_FRIEND_BY_ID_QUERY, Integer.class, userId, friendId);
         return count != null;
+    }
+
+    private List<Long> filmsIdLikedByUser(long userId) {
+        return jdbc.query(GET_ID_FILM_LIKED_BY_USER, rowMapperLong, userId);
+    }
+
+    private List<Long> coincidencesUsersId(long userRecId) {
+        Set<Long> filmsIdUserSet = new HashSet<>(filmsIdLikedByUser(userRecId));
+
+        List<Long> usersIds = jdbc.query(GET_ALL_USERS_ID, rowMapperLong);
+        long max = -1;
+        List<Long> result = new ArrayList<>();
+
+        for (Long userId : usersIds) {
+            if (userId == userRecId) continue;
+            long count = filmsIdLikedByUser(userId).stream()
+                    .filter(filmsIdUserSet::contains).count();
+
+            if (count > max) {
+                max = count;
+                result = new ArrayList<>(List.of(userId));
+            } else if (count == max) {
+                result.add(userId);
+            }
+        }
+        return result;
     }
 
     private void exceptionUser(User user) {
