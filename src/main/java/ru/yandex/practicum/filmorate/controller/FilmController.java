@@ -103,5 +103,16 @@ public class FilmController {
     public List<Film> getFilmsByDirector(@PathVariable long directorId, @RequestParam(defaultValue = "year") String sortBy) {
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(
+            @RequestParam long userId,
+            @RequestParam long friendId
+    ) {
+        log.info("Получен запрос GET /films/common с параметрами userId={}, friendId={}", userId, friendId);
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        log.info("Успешно возвращено {} общих фильмов", commonFilms.size());
+        return commonFilms;
+    }
+
 
 }

@@ -425,4 +425,87 @@ class FilmDbStorageTest {
     private User createTestUser2() {
         return User.builder().email("test2@mail.ru").login("testuser2").name("Test User 2").birthday(LocalDate.of(1992, 2, 2)).build();
     }
+
+    private Film createTestFilm3() {
+        return Film.builder()
+                .name("Test Film 3")
+                .description("Test Description 3")
+                .releaseDate(LocalDate.of(2022, 3, 3))
+                .duration(140L)
+                .mpa(Mpa.builder().id(3L).build())
+                .build();
+    }
+
+    private User createTestUser3() {
+        return User.builder()
+                .email("test3@mail.ru")
+                .login("testuser3")
+                .name("Test User 3")
+                .birthday(LocalDate.of(1993, 3, 3))
+                .build();
+    }
+
+    @Test
+    void getCommonFilms_ShouldReturnFilmsLikedByBothUsers() {
+        Film film1 = filmDbStorage.addFilmStorage(createTestFilm());
+        Film film2 = filmDbStorage.addFilmStorage(createTestFilm2());
+        Film film3 = filmDbStorage.addFilmStorage(createTestFilm3());
+
+        User user1 = userDbStorage.addUserStorage(createTestUser());
+        User user2 = userDbStorage.addUserStorage(createTestUser2());
+
+        filmDbStorage.addLikeFilm(film1.getId(), user1.getId());
+        filmDbStorage.addLikeFilm(film2.getId(), user1.getId());
+
+        filmDbStorage.addLikeFilm(film1.getId(), user2.getId());
+        filmDbStorage.addLikeFilm(film3.getId(), user2.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertEquals(1, commonFilms.size());
+        assertEquals(film1.getId(), commonFilms.get(0).getId());
+    }
+
+    @Test
+    void getCommonFilms_WhenNoCommonFilms_ShouldReturnEmptyList() {
+        Film film1 = filmDbStorage.addFilmStorage(createTestFilm());
+        Film film2 = filmDbStorage.addFilmStorage(createTestFilm2());
+
+        User user1 = userDbStorage.addUserStorage(createTestUser());
+        User user2 = userDbStorage.addUserStorage(createTestUser2());
+
+        filmDbStorage.addLikeFilm(film1.getId(), user1.getId());
+        filmDbStorage.addLikeFilm(film2.getId(), user2.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertTrue(commonFilms.isEmpty());
+    }
+
+    @Test
+    void getCommonFilms_ShouldBeSortedByPopularity() {
+        Film film1 = filmDbStorage.addFilmStorage(createTestFilm());
+        Film film2 = filmDbStorage.addFilmStorage(createTestFilm2());
+        Film film3 = filmDbStorage.addFilmStorage(createTestFilm3());
+
+        User user1 = userDbStorage.addUserStorage(createTestUser());
+        User user2 = userDbStorage.addUserStorage(createTestUser2());
+        User user3 = userDbStorage.addUserStorage(createTestUser3());
+
+        filmDbStorage.addLikeFilm(film1.getId(), user1.getId());
+        filmDbStorage.addLikeFilm(film1.getId(), user2.getId());
+        filmDbStorage.addLikeFilm(film1.getId(), user3.getId());
+
+        filmDbStorage.addLikeFilm(film2.getId(), user1.getId());
+        filmDbStorage.addLikeFilm(film2.getId(), user2.getId());
+
+        filmDbStorage.addLikeFilm(film3.getId(), user1.getId());
+        filmDbStorage.addLikeFilm(film3.getId(), user2.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertEquals(3, commonFilms.size());
+        assertEquals(film1.getId(), commonFilms.get(0).getId());
+        assertTrue(commonFilms.get(1).getId() < commonFilms.get(2).getId());
+    }
 }

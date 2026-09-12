@@ -48,6 +48,22 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String SEARCH_BY_TITLE_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating, " + "COUNT(DISTINCT lf.user_id) AS likes_count " + "FROM films AS fl " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "LEFT JOIN liked_film AS lf ON fl.film_id = lf.film_id " + "WHERE LOWER(fl.name) LIKE LOWER(?) " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
     private static final String SEARCH_BY_DIRECTOR_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating, " + "COUNT(DISTINCT lf.user_id) AS likes_count " + "FROM films AS fl " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "LEFT JOIN liked_film AS lf ON fl.film_id = lf.film_id " + "JOIN film_directors AS fd ON fl.film_id = fd.film_id " + "JOIN directors AS d ON fd.director_id = d.director_id " + "WHERE LOWER(d.name) LIKE LOWER(?) " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
     private static final String SEARCH_BY_TITLE_AND_DIRECTOR_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating, " + "COUNT(DISTINCT lf.user_id) AS likes_count " + "FROM films AS fl " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "LEFT JOIN liked_film AS lf ON fl.film_id = lf.film_id " + "LEFT JOIN film_directors AS fd ON fl.film_id = fd.film_id " + "LEFT JOIN directors AS d ON fd.director_id = d.director_id " + "WHERE LOWER(fl.name) LIKE LOWER(?) " + "OR LOWER(d.name) LIKE LOWER(?) " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " + "fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC";
+    private static final String GET_COMMON_FILMS_QUERY = "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " +
+            "fl.duration, fl.rating_id, r.name_rating, " +
+            "COUNT(lf.user_id) AS likes_count " +
+            "FROM films fl " +
+            "LEFT JOIN rating r ON fl.rating_id = r.rating_id " +
+            "LEFT JOIN liked_film lf ON fl.film_id = lf.film_id " +
+            "WHERE EXISTS ( " +
+            "    SELECT 1 FROM liked_film lf1 " +
+            "    WHERE lf1.film_id = fl.film_id AND lf1.user_id = ? " +
+            ") AND EXISTS ( " +
+            "    SELECT 1 FROM liked_film lf2 " +
+            "    WHERE lf2.film_id = fl.film_id AND lf2.user_id = ? " +
+            ") " +
+            "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " +
+            "fl.duration, fl.rating_id, r.name_rating " +
+            "ORDER BY likes_count DESC, fl.film_id ASC";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> rowMapper) {
         super(jdbc, rowMapper);
@@ -274,6 +290,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 log.warn("Жанр с id: {} уже добавлен для фильма с id: {}", genreId, filmId);
             }
         }
+    }
+
+    @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        log.trace("Вход в метод getCommonFilms с параметрами userId={}, friendId={}", userId, friendId);
+        List<Film> films = findAll(GET_COMMON_FILMS_QUERY, userId, friendId);
+        films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
+        log.info("Найдено {} общих фильмов у пользователей с id={} и id={}", films.size(), userId, friendId);
+        return films;
     }
 
     private boolean checkName(String name) {

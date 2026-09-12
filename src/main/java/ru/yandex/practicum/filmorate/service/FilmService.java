@@ -119,4 +119,19 @@ public class FilmService {
 
         return filmStorage.updateFilmStorage(film);
     }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        log.trace("Вход в метод getCommonFilms с параметрами userId={}, friendId={}", userId, friendId);
+
+        if (!userStorage.checkingId(userId)) {
+            log.warn("Запрос общих фильмов у несуществующего пользователя с id={}", userId);
+            throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
+        }
+        if (!userStorage.checkingId(friendId)) {
+            log.warn("Запрос общих фильмов с несуществующим пользователем с id={}", friendId);
+            throw new ValidationNotObjectException("Пользователь для сравнения с таким ID: " + friendId + " не найден");
+        }
+
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
 }
