@@ -25,8 +25,7 @@ public interface FilmStorage {
 
     boolean checkLike(long filmId, long userId);
 
-    default List<Film> getTopFilms(long count) {
-        return getTopFilms(count, null, null);
+    default List<Film> getTopFilms(long count) {return getTopFilms(count, null, null);
     }
 
     void addGenreFilm(long filmId, long genreId);
