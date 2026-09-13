@@ -413,13 +413,4 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }
     }
-
-    @Override
-    public List<Film> getCommonFilms(long userId, long friendId) {
-        log.trace("Вход в метод getCommonFilms с параметрами userId={}, friendId={}", userId, friendId);
-        List<Film> films = findAll(GET_COMMON_FILMS_QUERY, userId, friendId);
-        films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
-        log.info("Найдено {} общих фильмов у пользователей с id={} и id={}", films.size(), userId, friendId);
-        return films;
-    }
 }
