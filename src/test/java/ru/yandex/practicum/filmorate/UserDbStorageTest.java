@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.filmorate.dal.mappers.LongRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({UserDbStorage.class, UserRowMapper.class})
+@Import({UserDbStorage.class, UserRowMapper.class, LongRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class UserDbStorageTest {
 
@@ -154,7 +155,7 @@ class UserDbStorageTest {
 
         List<User> users = userDbStorage.getUserStorage();
 
-        assertEquals(2, users.size());
+        assertEquals(5, users.size());
     }
 
     @Test
@@ -194,7 +195,7 @@ class UserDbStorageTest {
 
         List<User> friends = userDbStorage.getAllFriends(user1.getId());
         assertEquals(1, friends.size());
-        assertEquals(user2.getId(), friends.get(0).getId());
+        assertEquals(user2.getId(), friends.getFirst().getId());
     }
 
     @Test
@@ -210,8 +211,8 @@ class UserDbStorageTest {
 
         assertEquals(1, friends1.size());
         assertEquals(1, friends2.size());
-        assertEquals(user2.getId(), friends1.get(0).getId());
-        assertEquals(user1.getId(), friends2.get(0).getId());
+        assertEquals(user2.getId(), friends1.getFirst().getId());
+        assertEquals(user1.getId(), friends2.getFirst().getId());
     }
 
     @Test
@@ -274,7 +275,7 @@ class UserDbStorageTest {
         List<User> commonFriends = userDbStorage.getCommonFriends(user1.getId(), user2.getId());
 
         assertEquals(1, commonFriends.size());
-        assertEquals(user3.getId(), commonFriends.get(0).getId());
+        assertEquals(user3.getId(), commonFriends.getFirst().getId());
     }
 
     @Test

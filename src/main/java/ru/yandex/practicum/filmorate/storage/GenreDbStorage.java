@@ -13,9 +13,7 @@ import java.util.Optional;
 public class GenreDbStorage extends BaseDbStorage<Genre> implements GenreStorage {
     private static final String GET_BY_ID_QUERY = "SELECT * FROM genres WHERE genre_id = ?";
     private static final String GET_ALL_QUERY = "SELECT * FROM genres";
-    private static final String GET_ALL_FIL_ID_QUERY = "SELECT gn.genre_id, gn.name FROM film_genres AS fg " +
-            "JOIN genres AS gn ON fg.genre_id=gn.genre_id " +
-            "JOIN films AS fl ON fg.film_id=fl.film_id WHERE fl.film_id = ?";
+    private static final String GET_ALL_FIL_ID_QUERY = "SELECT gn.genre_id, gn.name FROM film_genres AS fg " + "JOIN genres AS gn ON fg.genre_id=gn.genre_id " + "JOIN films AS fl ON fg.film_id=fl.film_id WHERE fl.film_id = ?";
     private static final String DELETE_BY_FILM_ID_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
 
     public GenreDbStorage(JdbcTemplate jdbc, RowMapper<Genre> rowMapper) {
@@ -30,8 +28,7 @@ public class GenreDbStorage extends BaseDbStorage<Genre> implements GenreStorage
 
     @Override
     public Genre getGenreById(long genreId) {
-        return findOne(GET_BY_ID_QUERY, genreId)
-                .orElseThrow(() -> new ValidationNotObjectException("Жанра с таким id не существует"));
+        return findOne(GET_BY_ID_QUERY, genreId).orElseThrow(() -> new ValidationNotObjectException("Жанра с таким id не существует"));
     }
 
     @Override
@@ -41,7 +38,7 @@ public class GenreDbStorage extends BaseDbStorage<Genre> implements GenreStorage
 
     @Override
     public List<Genre> getFilmIdGenreStorage(long filmId) {
-        return findAll(GET_ALL_FIL_ID_QUERY,  filmId);
+        return findAll(GET_ALL_FIL_ID_QUERY, filmId);
     }
 
     @Override

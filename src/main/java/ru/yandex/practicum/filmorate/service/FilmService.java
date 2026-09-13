@@ -67,14 +67,31 @@ public class FilmService {
         feedStorage.addEvent(userId, filmId, EventType.LIKE.name(), Operation.REMOVE.name());
     }
 
-    public List<Film> getTopFilms(long count) {
+    public List<Film> getTopFilms(long count, Long genreId, Integer year) {
+        log.trace("Вход в метод getTopFilms: count={}, genreId={}, year={}", count, genreId, year);
+
+        if (count <= 0) {
+            log.warn("Некорректное значение count={}", count);
+            throw new ValidationException("Количество фильмов в топе не может быть ноль или меньше ноля");
+        }
+        if (genreId != null && !genreStorage.checkGenreId(genreId)) {
+            throw new ValidationNotObjectException("Жанр с таким ID: " + genreId + " не найден");
+        }
+        if (year != null && year < 1895) {
+            throw new ValidationException("Год не может быть раньше 1895");
+        }
+
+        return filmStorage.getTopFilms(count, genreId, year);
+    }
+
+    /*public List<Film> getTopFilms(long count) {
         log.trace("Вход в метод getTopFilms с параметром count={}", count);
         if (count <= 0) {
             log.warn("Некорректное значение count={}", count);
             throw new ValidationException("Количество фильмов в топе не может быть ноль или меньше ноля");
         }
         return filmStorage.getTopFilms(count);
-    }
+    }*/
 
     public void addGenreFilm(long filmId, long genreId) {
         log.trace("Вход в метод addGenreFilm с параметрами filmId={}, genreId={}", filmId, genreId);
@@ -88,6 +105,26 @@ public class FilmService {
             throw new ValidationNotObjectException("Жанр с таким ID:" + genreId + " не найден");
         }
         filmStorage.addGenreFilm(filmId, genreId);
+    }
+
+    public List<Film> searchFilms(String query, String by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Поисковый запрос не может быть пустым");
+        }
+
+        if (by == null || by.isBlank()) {
+            throw new ValidationException("Параметр by не может быть пустым");
+        }
+
+        String[] searchTypes = by.split(",");
+
+        for (String type : searchTypes) {
+            if (!"title".equalsIgnoreCase(type.trim()) && !"director".equalsIgnoreCase(type.trim())) {
+                throw new ValidationException("Параметр by должен содержать title и/или director");
+            }
+        }
+
+        return filmStorage.searchFilms(query, by);
     }
 
     public Film updateFilm(UpdateFilmRequest updateFilm) {
@@ -110,7 +147,25 @@ public class FilmService {
         if (updateFilm.hasGenres()) {
             film.setGenres(updateFilm.getGenres());
         }
+        if (updateFilm.hasDirectors()) {
+            film.setDirectors(updateFilm.getDirectors());
+        }
 
         return filmStorage.updateFilmStorage(film);
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        log.trace("Вход в метод getCommonFilms с параметрами userId={}, friendId={}", userId, friendId);
+
+        if (!userStorage.checkingId(userId)) {
+            log.warn("Запрос общих фильмов у несуществующего пользователя с id={}", userId);
+            throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
+        }
+        if (!userStorage.checkingId(friendId)) {
+            log.warn("Запрос общих фильмов с несуществующим пользователем с id={}", friendId);
+            throw new ValidationNotObjectException("Пользователь для сравнения с таким ID: " + friendId + " не найден");
+        }
+
+        return filmStorage.getCommonFilms(userId, friendId);
     }
 }
