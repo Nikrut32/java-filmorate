@@ -119,7 +119,6 @@ public class ReviewDbStorageTest {
     void removeReviewGradeTest() {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
         reviewDbStorage.deleteLikeFromReview(savedReview.getReviewId(), 1L);
-        reviewDbStorage.removeLikeOrDislikeReview(savedReview.getReviewId(), 1L);
 
         Review updatedReview = reviewDbStorage.getReviewById(savedReview.getReviewId());
         assertThat(updatedReview.getUseful()).isEqualTo(0L);
