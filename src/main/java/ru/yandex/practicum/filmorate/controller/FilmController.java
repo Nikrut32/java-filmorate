@@ -123,6 +123,4 @@ public class FilmController {
         log.info("Успешно возвращено {} общих фильмов", commonFilms.size());
         return commonFilms;
     }
-
-
 }
