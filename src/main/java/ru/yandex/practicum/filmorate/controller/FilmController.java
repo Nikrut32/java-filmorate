@@ -48,6 +48,12 @@ public class FilmController {
         return filmService.getTopFilms(count);
     }*/
 
+    @GetMapping("/search")
+    public List<Film> searchFilms(@RequestParam String query, @RequestParam String by) {
+        log.info("Получен запрос GET /films/search: query={}, by={}", query, by);
+        return filmService.searchFilms(query, by);
+    }
+
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable long id) {
         log.info("Получен запрос GET /films/{id}} с параметром id={}", id);
@@ -57,7 +63,6 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         log.info("Получен запрос POST /films на добавление фильма: {}", film);
-        Film film2 = film;
         Film createdFilm = filmStorage.addFilmStorage(film);
 
         log.info("Фильм успешно создан с id={}: {}", createdFilm.getId(), createdFilm.getName());
@@ -102,6 +107,21 @@ public class FilmController {
         String userLogin = userStorage.getUserById(userId).getLogin();
         log.info("Пользователь {} успешно убрал лайк с фильма «{}»", userLogin, filmName);
         return new AnswerString("Пользователь " + userLogin + " убрал лайк поставленный на фильм «" + filmName + "»");
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable long directorId, @RequestParam(defaultValue = "year") String sortBy) {
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
+    }
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(
+            @RequestParam long userId,
+            @RequestParam long friendId
+    ) {
+        log.info("Получен запрос GET /films/common с параметрами userId={}, friendId={}", userId, friendId);
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        log.info("Успешно возвращено {} общих фильмов", commonFilms.size());
+        return commonFilms;
     }
 
 
