@@ -151,8 +151,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
         for (Long userId : usersIds) {
             if (userId == userRecId) continue;
-            long count = filmsIdLikedByUser(userId).stream()
-                    .filter(filmsIdUserSet::contains).count();
+            long count = filmsIdLikedByUser(userId).stream().filter(filmsIdUserSet::contains).count();
 
             if (count > max) {
                 max = count;

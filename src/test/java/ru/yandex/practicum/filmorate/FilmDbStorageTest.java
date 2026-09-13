@@ -388,8 +388,8 @@ class FilmDbStorageTest {
 
         assertNotNull(recommendations);
         assertEquals(1, recommendations.size());
-        assertEquals(3, recommendations.get(0).getId());
-        assertEquals("Начало", recommendations.get(0).getName());
+        assertEquals(3, recommendations.getFirst().getId());
+        assertEquals("Начало", recommendations.getFirst().getName());
     }
 
     @Test
@@ -427,33 +427,17 @@ class FilmDbStorageTest {
     }
 
     private Film createTestFilmWithGenres(List<Genre> genres) {
-        return Film.builder()
-                .name("Test Film With Genres")
-                .description("Test Description")
-                .releaseDate(LocalDate.of(2020, 1, 1))
-                .duration(120L)
-                .mpa(Mpa.builder().id(1L).build())
-                .genres(genres)
-                .build();
+        return Film.builder().name("Test Film With Genres").description("Test Description").releaseDate(LocalDate.of(2020, 1, 1)).duration(120L).mpa(Mpa.builder().id(1L).build()).genres(genres).build();
     }
 
     private Film createTestFilm2WithGenres(List<Genre> genres) {
-        return Film.builder()
-                .name("Test Film 2 With Genres")
-                .description("Test Description 2")
-                .releaseDate(LocalDate.of(2021, 2, 2))
-                .duration(130L)
-                .mpa(Mpa.builder().id(2L).build())
-                .genres(genres)
-                .build();
+        return Film.builder().name("Test Film 2 With Genres").description("Test Description 2").releaseDate(LocalDate.of(2021, 2, 2)).duration(130L).mpa(Mpa.builder().id(2L).build()).genres(genres).build();
     }
 
     @Test
     void getTopFilmsWithGenreFilterShouldReturnFilteredFilms() {
-        Film film1 = filmDbStorage.addFilmStorage(
-                createTestFilmWithGenres(List.of(Genre.builder().id(1L).build())));
-        Film film2 = filmDbStorage.addFilmStorage(
-                createTestFilmWithGenres(List.of(Genre.builder().id(2L).build())));
+        Film film1 = filmDbStorage.addFilmStorage(createTestFilmWithGenres(List.of(Genre.builder().id(1L).build())));
+        Film film2 = filmDbStorage.addFilmStorage(createTestFilmWithGenres(List.of(Genre.builder().id(2L).build())));
         User user = userDbStorage.addUserStorage(createTestUser());
 
         filmDbStorage.addLikeFilm(film1.getId(), user.getId());
@@ -462,7 +446,7 @@ class FilmDbStorageTest {
         List<Film> topFilms = filmDbStorage.getTopFilms(10, 1L, null);
 
         assertEquals(1, topFilms.size());
-        assertEquals(film1.getId(), topFilms.get(0).getId());
+        assertEquals(film1.getId(), topFilms.getFirst().getId());
     }
 
     @Test
@@ -477,15 +461,13 @@ class FilmDbStorageTest {
         List<Film> topFilms = filmDbStorage.getTopFilms(10, null, 2020);
 
         assertEquals(1, topFilms.size());
-        assertEquals(film2020.getId(), topFilms.get(0).getId());
+        assertEquals(film2020.getId(), topFilms.getFirst().getId());
     }
 
     @Test
     void getTopFilmsWithGenreAndYearFilterShouldReturnFilteredFilms() {
-        Film film1 = filmDbStorage.addFilmStorage(
-                createTestFilmWithGenres(List.of(Genre.builder().id(1L).build())));  // 2020
-        Film film2 = filmDbStorage.addFilmStorage(
-                createTestFilm2WithGenres(List.of(Genre.builder().id(1L).build()))); // 2021
+        Film film1 = filmDbStorage.addFilmStorage(createTestFilmWithGenres(List.of(Genre.builder().id(1L).build())));  // 2020
+        Film film2 = filmDbStorage.addFilmStorage(createTestFilm2WithGenres(List.of(Genre.builder().id(1L).build()))); // 2021
         User user = userDbStorage.addUserStorage(createTestUser());
 
         filmDbStorage.addLikeFilm(film1.getId(), user.getId());
@@ -494,7 +476,7 @@ class FilmDbStorageTest {
         List<Film> topFilms = filmDbStorage.getTopFilms(10, 1L, 2020);
 
         assertEquals(1, topFilms.size());
-        assertEquals(film1.getId(), topFilms.get(0).getId());
+        assertEquals(film1.getId(), topFilms.getFirst().getId());
     }
 
     @Test
@@ -541,22 +523,11 @@ class FilmDbStorageTest {
     }
 
     private Film createTestFilm3() {
-        return Film.builder()
-                .name("Test Film 3")
-                .description("Test Description 3")
-                .releaseDate(LocalDate.of(2022, 3, 3))
-                .duration(140L)
-                .mpa(Mpa.builder().id(3L).build())
-                .build();
+        return Film.builder().name("Test Film 3").description("Test Description 3").releaseDate(LocalDate.of(2022, 3, 3)).duration(140L).mpa(Mpa.builder().id(3L).build()).build();
     }
 
     private User createTestUser3() {
-        return User.builder()
-                .email("test3@mail.ru")
-                .login("testuser3")
-                .name("Test User 3")
-                .birthday(LocalDate.of(1993, 3, 3))
-                .build();
+        return User.builder().email("test3@mail.ru").login("testuser3").name("Test User 3").birthday(LocalDate.of(1993, 3, 3)).build();
     }
 
     @Test
@@ -577,6 +548,6 @@ class FilmDbStorageTest {
         List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
 
         assertEquals(1, commonFilms.size());
-        assertEquals(film1.getId(), commonFilms.get(0).getId());
+        assertEquals(film1.getId(), commonFilms.getFirst().getId());
     }
 }

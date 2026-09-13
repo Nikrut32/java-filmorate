@@ -84,29 +84,6 @@ public class FilmService {
         return filmStorage.getTopFilms(count, genreId, year);
     }
 
-    /*public List<Film> getTopFilms(long count) {
-        log.trace("Вход в метод getTopFilms с параметром count={}", count);
-        if (count <= 0) {
-            log.warn("Некорректное значение count={}", count);
-            throw new ValidationException("Количество фильмов в топе не может быть ноль или меньше ноля");
-        }
-        return filmStorage.getTopFilms(count);
-    }*/
-
-    public void addGenreFilm(long filmId, long genreId) {
-        log.trace("Вход в метод addGenreFilm с параметрами filmId={}, genreId={}", filmId, genreId);
-        if (!filmStorage.checkingId(filmId)) {
-            log.warn("Попытка добавить жанр у несуществующего фильма с id={}", filmId);
-            throw new ValidationNotObjectException("Фильм с таким ID:" + filmId + " не найден");
-        }
-
-        if (!genreStorage.checkGenreId(genreId)) {
-            log.warn("Попытка добавить несуществующий жанр с id={}", genreId);
-            throw new ValidationNotObjectException("Жанр с таким ID:" + genreId + " не найден");
-        }
-        filmStorage.addGenreFilm(filmId, genreId);
-    }
-
     public List<Film> searchFilms(String query, String by) {
         if (query == null || query.isBlank()) {
             throw new ValidationException("Поисковый запрос не может быть пустым");
@@ -129,6 +106,7 @@ public class FilmService {
 
     public Film updateFilm(UpdateFilmRequest updateFilm) {
         Film film = filmStorage.getFilmById(updateFilm.getId());
+
         if (updateFilm.hasName()) {
             film.setName(updateFilm.getName());
         }
@@ -149,6 +127,8 @@ public class FilmService {
         }
         if (updateFilm.hasDirectors()) {
             film.setDirectors(updateFilm.getDirectors());
+        } else {
+            film.setDirectors(List.of());
         }
 
         return filmStorage.updateFilmStorage(film);

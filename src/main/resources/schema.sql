@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS film_directors (
     CONSTRAINT film_directors_director_fk
     FOREIGN KEY (director_id)
     REFERENCES directors(director_id)
+    ON DELETE CASCADE
     );
 
 CREATE TABLE IF NOT EXISTS liked_film (

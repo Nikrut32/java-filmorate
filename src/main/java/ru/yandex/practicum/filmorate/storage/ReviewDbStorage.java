@@ -22,20 +22,15 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     @Autowired
     private FilmStorage filmStorage;
 
-    private static final String INSERT_QUERY = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) " +
-            "VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_QUERY = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) " + "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
     private static final String DELETE_QUERY = "DELETE FROM reviews WHERE review_id = ?";
     private static final String GET_BY_ID_QUERY = "SELECT * FROM reviews WHERE review_id = ?";
-    private static final String GET_BY_FILM_QUERY = "SELECT * FROM reviews WHERE film_id = ? " +
-            "ORDER BY useful DESC LIMIT ?";
+    private static final String GET_BY_FILM_QUERY = "SELECT * FROM reviews WHERE film_id = ? " + "ORDER BY useful DESC LIMIT ?";
     private static final String GET_ALL_QUERY = "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
-    private static final String MERGE_LIKE_QUERY = "MERGE INTO review_likes (review_id, user_id, is_useful) " +
-            "KEY (review_id, user_id) VALUES (?, ?, ?)";
+    private static final String MERGE_LIKE_QUERY = "MERGE INTO review_likes (review_id, user_id, is_useful) " + "KEY (review_id, user_id) VALUES (?, ?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM review_likes WHERE review_id = ? AND user_id = ?";
-    private static final String RECALCULATE_USEFUL_QUERY = "UPDATE reviews SET useful = " +
-            "(SELECT COALESCE(SUM(CASE WHEN is_useful = TRUE THEN 1 ELSE -1 END), 0) " +
-            "FROM review_likes WHERE review_id = ?) WHERE review_id = ?";
+    private static final String RECALCULATE_USEFUL_QUERY = "UPDATE reviews SET useful = " + "(SELECT COALESCE(SUM(CASE WHEN is_useful = TRUE THEN 1 ELSE -1 END), 0) " + "FROM review_likes WHERE review_id = ?) WHERE review_id = ?";
 
     public ReviewDbStorage(JdbcTemplate jdbc, RowMapper<Review> rowMapper) {
         super(jdbc, rowMapper);
@@ -47,20 +42,13 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
             throw new ValidationException("Содержание отзыва не может быть пустым");
         }
         if (!userStorage.checkingId(review.getUserId())) {
-            throw new ValidationNotObjectException(
-                    "Пользователь с таким ID: " + review.getUserId() + " не найден");
+            throw new ValidationNotObjectException("Пользователь с таким ID: " + review.getUserId() + " не найден");
         }
         if (!filmStorage.checkingId(review.getFilmId())) {
-            throw new ValidationNotObjectException(
-                    "Фильм с таким ID: " + review.getFilmId() + " не найден");
+            throw new ValidationNotObjectException("Фильм с таким ID: " + review.getFilmId() + " не найден");
         }
         int useful = review.getUseful() == null ? 0 : review.getUseful();
-        long id = insert(INSERT_QUERY,
-                review.getContent(),
-                review.getIsPositive(),
-                review.getUserId(),
-                review.getFilmId(),
-                useful);
+        long id = insert(INSERT_QUERY, review.getContent(), review.getIsPositive(), review.getUserId(), review.getFilmId(), useful);
         review.setReviewId(id);
         review.setUseful(useful);
         return review;
@@ -79,8 +67,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public Review getReviewById(long reviewId) {
-        return findOne(GET_BY_ID_QUERY, reviewId)
-                .orElseThrow(() -> new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден"));
+        return findOne(GET_BY_ID_QUERY, reviewId).orElseThrow(() -> new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден"));
     }
 
     @Override

@@ -10,10 +10,8 @@ import java.util.List;
 @Repository
 public class FeedDbStorage extends BaseDbStorage<Event> implements FeedStorage {
 
-    private static final String INSERT_QUERY =
-            "INSERT INTO feed (user_id, entity_id, event_type, operation, created_at) VALUES (?, ?, ?, ?, ?)";
-    private static final String GET_FEED_QUERY =
-            "SELECT * FROM feed WHERE user_id = ? ORDER BY created_at DESC, event_id DESC";
+    private static final String INSERT_QUERY = "INSERT INTO feed (user_id, entity_id, event_type, operation, created_at) VALUES (?, ?, ?, ?, ?)";
+    private static final String GET_FEED_QUERY = "SELECT * FROM feed WHERE user_id = ? ORDER BY created_at, event_id";
 
     public FeedDbStorage(JdbcTemplate jdbc, RowMapper<Event> rowMapper) {
         super(jdbc, rowMapper);

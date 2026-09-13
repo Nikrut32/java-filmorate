@@ -28,25 +28,14 @@ public class FilmController {
     @GetMapping
     public List<Film> getFilms() {
         log.info("Получен запрос GET /films. Текущее количество фильмов: {}", filmStorage.getFilmStorage().size());
-        log.info("Успешно возвращено {} фильмов", filmStorage.getFilmStorage().size());
         return filmStorage.getFilmStorage();
     }
 
     @GetMapping("/popular")
-    public List<Film> topFilms(
-            @RequestParam(defaultValue = "10") long count,
-            @RequestParam(required = false) Long genreId,
-            @RequestParam(required = false) Integer year) {
-        log.info("Получен запрос GET /films/popular с параметрами count={}, genreId={}, year={}",
-                count, genreId, year);
+    public List<Film> topFilms(@RequestParam(defaultValue = "10") long count, @RequestParam(required = false) Long genreId, @RequestParam(required = false) Integer year) {
+        log.info("Получен запрос GET /films/popular с параметрами count={}, genreId={}, year={}", count, genreId, year);
         return filmService.getTopFilms(count, genreId, year);
     }
-
-    /*@GetMapping("/popular")
-    public List<Film> topFilms(@RequestParam(defaultValue = "10") long count) {
-        log.info("Получен запрос GET /films/popular с параметром count={}", count);
-        return filmService.getTopFilms(count);
-    }*/
 
     @GetMapping("/search")
     public List<Film> searchFilms(@RequestParam String query, @RequestParam String by) {
@@ -115,9 +104,7 @@ public class FilmController {
     }
 
     @GetMapping("/common")
-    public List<Film> getCommonFilms(
-            @RequestParam long userId,
-            @RequestParam long friendId) {
+    public List<Film> getCommonFilms(@RequestParam long userId, @RequestParam long friendId) {
         log.info("Получен запрос GET /films/common с параметрами userId={}, friendId={}", userId, friendId);
         List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
         log.info("Успешно возвращено {} общих фильмов", commonFilms.size());

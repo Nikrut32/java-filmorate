@@ -41,11 +41,7 @@ class UserDbStorageTest {
 
     @Test
     void addUserStorageWithoutNameTest() {
-        User user = User.builder()
-                .email("test@mail.ru")
-                .login("testuser")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build();
+        User user = User.builder().email("test@mail.ru").login("testuser").birthday(LocalDate.of(1990, 1, 1)).build();
 
         User created = userDbStorage.addUserStorage(user);
 
@@ -58,60 +54,35 @@ class UserDbStorageTest {
         User user1 = createTestUser();
         userDbStorage.addUserStorage(user1);
 
-        User user2 = User.builder()
-                .email("test@mail.ru")
-                .login("anotheruser")
-                .name("Another User")
-                .birthday(LocalDate.of(1991, 1, 1))
-                .build();
+        User user2 = User.builder().email("test@mail.ru").login("anotheruser").name("Another User").birthday(LocalDate.of(1991, 1, 1)).build();
 
         assertThrows(ValidationException.class, () -> userDbStorage.addUserStorage(user2));
     }
 
     @Test
     void addUserStorageWithEmptyLoginTest() {
-        User user = User.builder()
-                .email("test@mail.ru")
-                .login("")
-                .name("Test User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build();
+        User user = User.builder().email("test@mail.ru").login("").name("Test User").birthday(LocalDate.of(1990, 1, 1)).build();
 
         assertThrows(ValidationException.class, () -> userDbStorage.addUserStorage(user));
     }
 
     @Test
     void addUserStorageWithLoginContainingSpacesTest() {
-        User user = User.builder()
-                .email("test@mail.ru")
-                .login("test user")
-                .name("Test User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build();
+        User user = User.builder().email("test@mail.ru").login("test user").name("Test User").birthday(LocalDate.of(1990, 1, 1)).build();
 
         assertThrows(ValidationException.class, () -> userDbStorage.addUserStorage(user));
     }
 
     @Test
     void addUserStorageWithFutureBirthdayTest() {
-        User user = User.builder()
-                .email("test@mail.ru")
-                .login("testuser")
-                .name("Test User")
-                .birthday(LocalDate.now().plusDays(1))
-                .build();
+        User user = User.builder().email("test@mail.ru").login("testuser").name("Test User").birthday(LocalDate.now().plusDays(1)).build();
 
         assertThrows(ValidationException.class, () -> userDbStorage.addUserStorage(user));
     }
 
     @Test
     void addUserStorageWithEmptyEmailTest() {
-        User user = User.builder()
-                .email("")
-                .login("testuser")
-                .name("Test User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build();
+        User user = User.builder().email("").login("testuser").name("Test User").birthday(LocalDate.of(1990, 1, 1)).build();
 
         assertThrows(ValidationException.class, () -> userDbStorage.addUserStorage(user));
     }
@@ -121,13 +92,7 @@ class UserDbStorageTest {
         User user = createTestUser();
         User created = userDbStorage.addUserStorage(user);
 
-        User updatedUser = User.builder()
-                .id(created.getId())
-                .email("updated@mail.ru")
-                .login("updateduser")
-                .name("Updated User")
-                .birthday(LocalDate.of(1991, 2, 2))
-                .build();
+        User updatedUser = User.builder().id(created.getId()).email("updated@mail.ru").login("updateduser").name("Updated User").birthday(LocalDate.of(1991, 2, 2)).build();
 
         User updated = userDbStorage.updateUserStorage(updatedUser);
 
@@ -144,8 +109,7 @@ class UserDbStorageTest {
 
         userDbStorage.removeUserStorage(created.getId());
 
-        assertThrows(ValidationNotObjectException.class,
-                () -> userDbStorage.getUserById(created.getId()));
+        assertThrows(ValidationNotObjectException.class, () -> userDbStorage.getUserById(created.getId()));
     }
 
     @Test
@@ -173,8 +137,7 @@ class UserDbStorageTest {
 
     @Test
     void getUserByIdNotFoundTest() {
-        assertThrows(ValidationNotObjectException.class,
-                () -> userDbStorage.getUserById(999L));
+        assertThrows(ValidationNotObjectException.class, () -> userDbStorage.getUserById(999L));
     }
 
     @Test
@@ -309,29 +272,14 @@ class UserDbStorageTest {
     }
 
     private User createTestUser() {
-        return User.builder()
-                .email("test@mail.ru")
-                .login("testuser")
-                .name("Test User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build();
+        return User.builder().email("test@mail.ru").login("testuser").name("Test User").birthday(LocalDate.of(1990, 1, 1)).build();
     }
 
     private User createTestUser2() {
-        return User.builder()
-                .email("test2@mail.ru")
-                .login("testuser2")
-                .name("Test User 2")
-                .birthday(LocalDate.of(1992, 2, 2))
-                .build();
+        return User.builder().email("test2@mail.ru").login("testuser2").name("Test User 2").birthday(LocalDate.of(1992, 2, 2)).build();
     }
 
     private User createTestUser3() {
-        return User.builder()
-                .email("test3@mail.ru")
-                .login("testuser3")
-                .name("Test User 3")
-                .birthday(LocalDate.of(1993, 3, 3))
-                .build();
+        return User.builder().email("test3@mail.ru").login("testuser3").name("Test User 3").birthday(LocalDate.of(1993, 3, 3)).build();
     }
 }

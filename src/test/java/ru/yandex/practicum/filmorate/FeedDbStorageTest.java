@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FeedDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserDbStorage;
+import ru.yandex.practicum.filmorate.dal.mappers.LongRowMapper;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FeedDbStorage.class, EventRowMapper.class, UserDbStorage.class, UserRowMapper.class})
+@Import({FeedDbStorage.class, EventRowMapper.class, UserDbStorage.class, UserRowMapper.class, LongRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FeedDbStorageTest {
 
@@ -31,23 +32,18 @@ class FeedDbStorageTest {
 
     @Test
     void addEventAndGetFeed() {
-        User user = userDbStorage.addUserStorage(User.builder()
-                .email("test@mail.ru")
-                .login("testuser")
-                .name("Test User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build());
+        User user = userDbStorage.addUserStorage(User.builder().email("test@mail.ru").login("testuser").name("Test User").birthday(LocalDate.of(1990, 1, 1)).build());
 
         feedDbStorage.addEvent(user.getId(), 100L, EventType.LIKE.name(), Operation.ADD.name());
         List<Event> feed = feedDbStorage.getFeed(user.getId());
 
         assertEquals(1, feed.size());
-        assertEquals("LIKE", feed.get(0).getEventType());
-        assertEquals("ADD", feed.get(0).getOperation());
-        assertEquals(100L, feed.get(0).getEntityId());
-        assertEquals(user.getId(), feed.get(0).getUserId());
-        assertNotNull(feed.get(0).getEventId());
-        assertNotNull(feed.get(0).getTimestamp());
+        assertEquals("LIKE", feed.getFirst().getEventType());
+        assertEquals("ADD", feed.getFirst().getOperation());
+        assertEquals(100L, feed.getFirst().getEntityId());
+        assertEquals(user.getId(), feed.getFirst().getUserId());
+        assertNotNull(feed.getFirst().getEventId());
+        assertNotNull(feed.getFirst().getTimestamp());
     }
 
     @Test
@@ -60,12 +56,7 @@ class FeedDbStorageTest {
 
     @Test
     void feedShouldReturnEventsNewestFirst() throws InterruptedException {
-        User user = userDbStorage.addUserStorage(User.builder()
-                .email("order@mail.ru")
-                .login("orderuser")
-                .name("Order User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build());
+        User user = userDbStorage.addUserStorage(User.builder().email("order@mail.ru").login("orderuser").name("Order User").birthday(LocalDate.of(1990, 1, 1)).build());
 
         feedDbStorage.addEvent(user.getId(), 1L, EventType.LIKE.name(), Operation.ADD.name());
         Thread.sleep(5);
@@ -77,19 +68,14 @@ class FeedDbStorageTest {
 
         assertEquals(3, feed.size());
         // Сначала самые новые
-        assertEquals(3L, feed.get(0).getEntityId());
+        assertEquals(1L, feed.get(0).getEntityId());
         assertEquals(2L, feed.get(1).getEntityId());
-        assertEquals(1L, feed.get(2).getEntityId());
+        assertEquals(3L, feed.get(2).getEntityId());
     }
 
     @Test
     void feedShouldStoreAllEventTypesAndOperations() {
-        User user = userDbStorage.addUserStorage(User.builder()
-                .email("types@mail.ru")
-                .login("typesuser")
-                .name("Types User")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .build());
+        User user = userDbStorage.addUserStorage(User.builder().email("types@mail.ru").login("typesuser").name("Types User").birthday(LocalDate.of(1990, 1, 1)).build());
 
         feedDbStorage.addEvent(user.getId(), 10L, EventType.LIKE.name(), Operation.ADD.name());
         feedDbStorage.addEvent(user.getId(), 20L, EventType.LIKE.name(), Operation.REMOVE.name());

@@ -37,17 +37,10 @@ public class ReviewService {
             throw new ValidationNotObjectException("Фильм с id: " + request.getFilmId() + " не найден");
         }
 
-        Review review = Review.builder()
-                .content(request.getContent())
-                .isPositive(request.getIsPositive())
-                .userId(request.getUserId())
-                .filmId(request.getFilmId())
-                .useful(0)
-                .build();
+        Review review = Review.builder().content(request.getContent()).isPositive(request.getIsPositive()).userId(request.getUserId()).filmId(request.getFilmId()).useful(0).build();
 
         Review created = reviewStorage.addReview(review);
-        feedStorage.addEvent(created.getUserId(), created.getReviewId(),
-                EventType.REVIEW.name(), Operation.ADD.name());
+        feedStorage.addEvent(created.getUserId(), created.getReviewId(), EventType.REVIEW.name(), Operation.ADD.name());
         log.info("Отзыв с id={} успешно создан", created.getReviewId());
         return created;
     }
@@ -64,8 +57,7 @@ public class ReviewService {
         }
 
         Review updated = reviewStorage.updateReview(review);
-        feedStorage.addEvent(updated.getUserId(), updated.getReviewId(),
-                EventType.REVIEW.name(), Operation.UPDATE.name());
+        feedStorage.addEvent(updated.getUserId(), updated.getReviewId(), EventType.REVIEW.name(), Operation.UPDATE.name());
         log.info("Отзыв с id={} успешно обновлен", updated.getReviewId());
         return updated;
     }
@@ -74,8 +66,7 @@ public class ReviewService {
     public void removeReview(long reviewId) {
         Review review = reviewStorage.getReviewById(reviewId);
         reviewStorage.removeReview(reviewId);
-        feedStorage.addEvent(review.getUserId(), reviewId,
-                EventType.REVIEW.name(), Operation.REMOVE.name());
+        feedStorage.addEvent(review.getUserId(), reviewId, EventType.REVIEW.name(), Operation.REMOVE.name());
         log.info("Отзыв с id={} успешно удален", reviewId);
     }
 
@@ -99,6 +90,15 @@ public class ReviewService {
             throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
         }
         reviewStorage.addLikeToReview(reviewId, userId, isUseful);
+
+        if (isUseful) {
+            feedStorage.addEvent(
+                    userId,
+                    reviewId,
+                    EventType.LIKE.name(),
+                    Operation.ADD.name()
+            );
+        }
     }
 
     @Transactional

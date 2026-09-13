@@ -11,13 +11,6 @@ import java.sql.SQLException;
 public class EventRowMapper implements RowMapper<Event> {
     @Override
     public Event mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return Event.builder()
-                .eventId(rs.getLong("event_id"))
-                .userId(rs.getLong("user_id"))
-                .entityId(rs.getLong("entity_id"))
-                .eventType(rs.getString("event_type"))
-                .operation(rs.getString("operation"))
-                .timestamp(rs.getLong("created_at"))
-                .build();
+        return Event.builder().eventId(rs.getLong("event_id")).userId(rs.getLong("user_id")).entityId(rs.getLong("entity_id")).eventType(rs.getString("event_type")).operation(rs.getString("operation")).timestamp(rs.getLong("created_at")).build();
     }
 }
