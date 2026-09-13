@@ -1,14 +1,14 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
-import ru.yandex.practicum.filmorate.model.AnswerString;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
-import ru.yandex.practicum.filmorate.storage.ReviewStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 
@@ -17,72 +17,67 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class ReviewController {
+
     private final ReviewService reviewService;
-    private final ReviewStorage reviewStorage;
-    private final UserStorage userStorage;
-
-    @GetMapping
-    public List<Review> getAllReviews(@RequestParam(defaultValue = "0") long filmId,
-                                      @RequestParam(defaultValue = "10") long count) {
-        log.info("Получен запрос GET /reviews");
-        log.info("Успешно возвращено {} отзывов", reviewStorage.getReviewStorage(filmId, count));
-        return reviewStorage.getReviewStorage(filmId, count);
-    }
-
-    @GetMapping("{id}")
-    public Review getReviewById(@PathVariable long id) {
-        log.info("Получен запрос GET /reviews/{id}} с параметром id={}", id);
-        return reviewStorage.getReviewById(id);
-    }
 
     @PostMapping
-    public Review createReview(@RequestBody Review review) {
-        log.info("Получен запрос POST /reviews на добавление отзыва: {}", review);
-        Review createReview = reviewStorage.addReview(review);
-        log.info("Отзыв успешно создан с id={}", createReview.getReviewId());
-        return createReview;
+    @ResponseStatus(HttpStatus.CREATED)
+    public Review createReview(@Valid @RequestBody NewReviewRequest request) {
+        log.info("Получен запрос POST /reviews на создание отзыва: {}", request);
+        return reviewService.addReview(request);
     }
 
     @PutMapping
-    public Review updateReview(@RequestBody UpdateReviewRequest review) {
-        log.info("Получен запрос PUT /reviews на обновление фильма: {}", review);
-        Review updateReview = reviewService.updateReview(review);
-        log.info("Отзыв с id={} успешно обновлен.", updateReview.getReviewId());
-        return updateReview;
-    }
-
-    @PutMapping("{id}/like/{userId}")
-    public AnswerString likeReview(@PathVariable long id, @PathVariable long userId) {
-        log.info("Получен запрос PUT /reviews/{}/like/{} на добавление лайка", id, userId);
-        reviewService.addLike(id, userId, true);
-        String userLogin = userStorage.getUserById(userId).getLogin();
-        log.info("Пользователь {} успешно поставил лайк на отзыв с id: {}", userLogin, id);
-        return new AnswerString("Пользователь " + userLogin + " поставил лайк на отзыв с id: " + id);
-    }
-
-    @PutMapping("{id}/dislike/{userId}")
-    public AnswerString dislikeReview(@PathVariable long id, @PathVariable long userId) {
-        log.info("Получен запрос PUT /reviews/{}/dislike/{} на добавление дизлайка", id, userId);
-        reviewService.addLike(id, userId, false);
-        String userLogin = userStorage.getUserById(userId).getLogin();
-        log.info("Пользователь {} успешно поставил дизлайк на отзыв с id: {}", userLogin, id);
-        return new AnswerString("Пользователь " + userLogin + " поставил дизлайк на отзыв с id: " + id);
+    public Review updateReview(@Valid @RequestBody UpdateReviewRequest request) {
+        log.info("Получен запрос PUT /reviews на обновление отзыва: {}", request);
+        return reviewService.updateReview(request);
     }
 
     @DeleteMapping("/{id}")
-    public AnswerString deleteReview(@PathVariable long id) {
-        log.info("Получен запрос DELETE /reviews/{} на удаление отзыва", id);
-        reviewStorage.removeReview(id);
-        log.info("Отзыв с id={} успешно удален", id);
-        return new AnswerString("Отзыв с id: " + id + " успешно удален");
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteReview(@PathVariable long id) {
+        log.info("Получен запрос DELETE /reviews/{}", id);
+        reviewService.removeReview(id);
     }
 
-    @DeleteMapping("{id}/like/{userId}")
-    public AnswerString deleteLike(@PathVariable long id, @PathVariable long userId) {
-        log.info("Получен запрос DELETE /reviews/{}/dislike/{} на удаление оценки", id, userId);
-        reviewStorage.removeLikeOrDislikeReview(id, userId);
-        String userLogin = userStorage.getUserById(userId).getLogin();
-        log.info("Пользователь {} успешно убрал оценку с отзыва id: {}", userLogin, id);
-        return new AnswerString("Пользователь " + userLogin + " убрал оценку с отзыва id: " + id);
+    @GetMapping("/{id}")
+    public Review getReviewById(@PathVariable long id) {
+        log.info("Получен запрос GET /reviews/{}", id);
+        return reviewService.getReviewById(id);
+    }
+
+    @GetMapping
+    public List<Review> getReviews(@RequestParam(required = false) Long filmId,
+                                   @RequestParam(defaultValue = "10") int count) {
+        log.info("Получен запрос GET /reviews с filmId={}, count={}", filmId, count);
+        return reviewService.getReviews(filmId, count);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void addLike(@PathVariable long id, @PathVariable long userId) {
+        log.info("Получен запрос PUT /reviews/{}/like/{}", id, userId);
+        reviewService.addLikeToReview(id, userId, true);
+    }
+
+    @PutMapping("/{id}/dislike/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void addDislike(@PathVariable long id, @PathVariable long userId) {
+        log.info("Получен запрос PUT /reviews/{}/dislike/{}", id, userId);
+        reviewService.addLikeToReview(id, userId, false);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteLike(@PathVariable long id, @PathVariable long userId) {
+        log.info("Получен запрос DELETE /reviews/{}/like/{}", id, userId);
+        reviewService.deleteLikeFromReview(id, userId);
+    }
+
+    @DeleteMapping("/{id}/dislike/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteDislike(@PathVariable long id, @PathVariable long userId) {
+        log.info("Получен запрос DELETE /reviews/{}/dislike/{}", id, userId);
+        reviewService.deleteLikeFromReview(id, userId);
     }
 }

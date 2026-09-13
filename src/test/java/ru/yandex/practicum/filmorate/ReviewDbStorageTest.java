@@ -96,7 +96,7 @@ public class ReviewDbStorageTest {
                 .build();
         reviewDbStorage.addReview(anotherReview);
 
-        List<Review> reviews = reviewDbStorage.getReviewStorage(1L, 10L);
+        List<Review> reviews = reviewDbStorage.getReviewsByFilmId(1L, 10);
 
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(review -> review.getFilmId() == 1L);
@@ -106,11 +106,11 @@ public class ReviewDbStorageTest {
     void updateReviewUsefulTest() {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
 
-        reviewDbStorage.addLikeOrDislikeReview(savedReview.getReviewId(), 1L, true);
+        reviewDbStorage.addLikeToReview(savedReview.getReviewId(), 1L, true);
         Review updatedReview = reviewDbStorage.getReviewById(savedReview.getReviewId());
         assertThat(updatedReview.getUseful()).isEqualTo(1L);
 
-        reviewDbStorage.addLikeOrDislikeReview(savedReview.getReviewId(), 1L, false);
+        reviewDbStorage.addLikeToReview(savedReview.getReviewId(), 1L, false);
         updatedReview = reviewDbStorage.getReviewById(savedReview.getReviewId());
         assertThat(updatedReview.getUseful()).isEqualTo(-1L);
     }
@@ -118,7 +118,7 @@ public class ReviewDbStorageTest {
     @Test
     void removeReviewGradeTest() {
         Review savedReview = reviewDbStorage.addReview(createTestPreview());
-        reviewDbStorage.addLikeOrDislikeReview(savedReview.getReviewId(), 1L, true);
+        reviewDbStorage.deleteLikeFromReview(savedReview.getReviewId(), 1L);
         reviewDbStorage.removeLikeOrDislikeReview(savedReview.getReviewId(), 1L);
 
         Review updatedReview = reviewDbStorage.getReviewById(savedReview.getReviewId());

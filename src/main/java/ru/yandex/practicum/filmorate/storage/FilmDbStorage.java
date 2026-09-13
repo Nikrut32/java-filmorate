@@ -58,6 +58,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String GET_TOP_QUERY = "SELECT fl.film_id, name, description, release_date, " + "duration, fl.rating_id, r.name_rating, COUNT(lf.user_id) AS likes_count " + "FROM liked_film AS lf " + "RIGHT JOIN films AS fl ON lf.film_id = fl.film_id " + "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " + "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, fl.duration, fl.rating_id, r.name_rating " + "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+    private static final String CHECK_LIKE_BY_IDS_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ? AND user_id = ?";
     private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
     private static final String ADD_DIRECTOR_QUERY = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
     private static final String GET_FILM_DIRECTORS_QUERY = "SELECT d.director_id, d.name " + "FROM film_directors fd " + "JOIN directors d ON fd.director_id = d.director_id " + "WHERE fd.film_id = ?";
@@ -201,7 +202,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public void deleteLikeFilm(long filmId, long userId) {
-        delete(checkLikeId(filmId), DELETE_LIKE_QUERY, filmId, userId);
+        delete(checkLike(filmId, userId), DELETE_LIKE_QUERY, filmId, userId);
+    }
+
+    @Override
+    public boolean checkLike(long filmId, long userId) {
+        Integer count = jdbc.queryForObject(CHECK_LIKE_BY_IDS_QUERY, Integer.class, filmId, userId);
+        return count != null && count > 0;
     }
 
     @Override

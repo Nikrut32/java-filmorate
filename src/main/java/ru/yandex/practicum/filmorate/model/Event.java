@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Review {
-    private Long reviewId;
-    private String content;
-    private Boolean isPositive;
+public class Event {
+    private Long timestamp;
     private Long userId;
-    private Long filmId;
-    private Integer useful;
+    private String eventType;
+    private String operation;
+    private Long eventId;
+    private Long entityId;
 }

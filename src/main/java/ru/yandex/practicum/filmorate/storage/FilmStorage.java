@@ -23,11 +23,11 @@ public interface FilmStorage {
 
     public List<Film> getTopFilms(long count, Long genreId, Integer year);
 
+    boolean checkLike(long filmId, long userId);
+
     default List<Film> getTopFilms(long count) {
-        
-        return getTopFilms(count, null, null);
-        
-    }
+    return getTopFilms(count, null, null);
+}
 
     void addGenreFilm(long filmId, long genreId);
 
