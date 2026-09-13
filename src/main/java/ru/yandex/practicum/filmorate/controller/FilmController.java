@@ -33,10 +33,20 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
+    public List<Film> topFilms(
+            @RequestParam(defaultValue = "10") long count,
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) Integer year) {
+        log.info("Получен запрос GET /films/popular с параметрами count={}, genreId={}, year={}",
+                count, genreId, year);
+        return filmService.getTopFilms(count, genreId, year);
+    }
+
+    /*@GetMapping("/popular")
     public List<Film> topFilms(@RequestParam(defaultValue = "10") long count) {
         log.info("Получен запрос GET /films/popular с параметром count={}", count);
         return filmService.getTopFilms(count);
-    }
+    }*/
 
     @GetMapping("/search")
     public List<Film> searchFilms(@RequestParam String query, @RequestParam String by) {
@@ -103,11 +113,11 @@ public class FilmController {
     public List<Film> getFilmsByDirector(@PathVariable long directorId, @RequestParam(defaultValue = "year") String sortBy) {
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
+
     @GetMapping("/common")
     public List<Film> getCommonFilms(
             @RequestParam long userId,
-            @RequestParam long friendId
-    ) {
+            @RequestParam long friendId) {
         log.info("Получен запрос GET /films/common с параметрами userId={}, friendId={}", userId, friendId);
         List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
         log.info("Успешно возвращено {} общих фильмов", commonFilms.size());
