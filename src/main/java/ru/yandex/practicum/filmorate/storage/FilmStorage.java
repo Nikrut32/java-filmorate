@@ -24,4 +24,6 @@ public interface FilmStorage {
     public List<Film> getTopFilms(long count);
 
     public void addGenreFilm(long filmId, long genreId);
+
+    boolean checkLike(long filmId, long userId);
 }

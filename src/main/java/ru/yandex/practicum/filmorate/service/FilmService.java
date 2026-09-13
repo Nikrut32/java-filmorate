@@ -3,10 +3,14 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Operation;
+import ru.yandex.practicum.filmorate.storage.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -21,7 +25,9 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final GenreStorage genreStorage;
+    private final FeedStorage feedStorage;
 
+    @Transactional
     public void addLike(long filmId, long userId) {
         log.trace("Вход в метод addLike с параметрами filmId={}, userId={}", filmId, userId);
 
@@ -33,10 +39,16 @@ public class FilmService {
             log.warn("Попытка добавить лайк от несуществующего пользователя с id={}", userId);
             throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
         }
+        if (filmStorage.checkLike(filmId, userId)) {
+            log.warn("Пользователь {} уже лайкал фильм {}", userId, filmId);
+            return;
+        }
         filmStorage.addLikeFilm(filmId, userId);
+        feedStorage.addEvent(userId, filmId, EventType.LIKE.name(), Operation.ADD.name());
 
     }
 
+    @Transactional
     public void deleteLike(long filmId, long userId) {
         log.trace("Вход в метод deleteLike с параметрами filmId={}, userId={}", filmId, userId);
         if (!filmStorage.checkingId(filmId)) {
@@ -47,7 +59,12 @@ public class FilmService {
             log.warn("Попытка удалить лайк от несуществующего пользователя с id={}", userId);
             throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
         }
+        if (!filmStorage.checkLike(filmId, userId)) {
+            log.warn("Пользователь {} не лайкал фильм {}", userId, filmId);
+            return;
+        }
         filmStorage.deleteLikeFilm(filmId, userId);
+        feedStorage.addEvent(userId, filmId, EventType.LIKE.name(), Operation.REMOVE.name());
     }
 
     public List<Film> getTopFilms(long count) {

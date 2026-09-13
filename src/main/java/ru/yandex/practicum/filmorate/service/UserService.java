@@ -3,9 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
@@ -17,6 +21,9 @@ public class UserService {
 
     private final UserStorage userStorage;
 
+    private final FeedStorage feedStorage;
+
+    @Transactional
     public void addFriend(long userId, long friendId) {
         log.trace("Вход в метод addFriend с параметрами userId={}, friendId={}", userId, friendId);
         if (!userStorage.checkingId(userId)) {
@@ -28,8 +35,10 @@ public class UserService {
             throw new ValidationNotObjectException("Id друга не найден");
         }
         userStorage.addFriend(userId, friendId);
+        feedStorage.addEvent(userId, friendId, EventType.FRIEND.name(), Operation.ADD.name());
     }
 
+    @Transactional
     public void deleteFriend(long userId, long friendId) {
         log.trace("Вход в метод deleteFriend с параметрами userId={}, friendId={}", userId, friendId);
         if (!userStorage.checkingId(userId)) {
@@ -41,6 +50,7 @@ public class UserService {
             throw new ValidationNotObjectException("Друг с таким ID: " + friendId + " не найден");
         }
         userStorage.deleteFriend(userId, friendId);
+        feedStorage.addEvent(userId, friendId, EventType.FRIEND.name(), Operation.REMOVE.name());
     }
 
     public List<User> getAllFriends(long userId) {

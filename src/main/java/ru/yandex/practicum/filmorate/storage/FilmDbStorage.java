@@ -45,8 +45,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, fl.duration, fl.rating_id, r.name_rating " +
             "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-    private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
-
+    private static final String CHECK_LIKE_BY_IDS_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ? AND user_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> rowMapper) {
         super(jdbc, rowMapper);
@@ -153,7 +152,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public void deleteLikeFilm(long filmId, long userId) {
-        delete(checkLikeId(filmId), DELETE_LIKE_QUERY, filmId, userId);
+        delete(checkLike(filmId, userId), DELETE_LIKE_QUERY, filmId, userId);
+    }
+
+    @Override
+    public boolean checkLike(long filmId, long userId) {
+        Integer count = jdbc.queryForObject(CHECK_LIKE_BY_IDS_QUERY, Integer.class, filmId, userId);
+        return count != null && count > 0;
     }
 
     @Override
@@ -194,11 +199,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private boolean checkName(String name) {
         Optional<Film> film = findOne(GET_BY_NAME_QUERY, name);
         return film.isPresent();
-    }
-
-    private boolean checkLikeId(long filmId) {
-        Integer count = jdbc.queryForObject(CHECK_LIKE_QUERY, Integer.class, filmId);
-        return count != null && count != 0;
     }
 
     private void exceptionFilm(Film film) {

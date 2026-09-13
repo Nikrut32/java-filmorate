@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS review_likes;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS feed;
 DROP TABLE IF EXISTS liked_film;
 DROP TABLE IF EXISTS film_genres;
 DROP TABLE IF EXISTS user_friends;
@@ -62,4 +65,35 @@ CREATE TABLE IF NOT EXISTS film_genres (
     CONSTRAINT CONSTRAINT_A FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
     CONSTRAINT CONSTRAINT_A3 FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
 );
+CREATE TABLE IF NOT EXISTS feed (
+    event_id INTEGER NOT NULL AUTO_INCREMENT,
+    user_id INTEGER NOT NULL,
+    entity_id INTEGER NOT NULL,
+    event_type CHARACTER VARYING NOT NULL,
+    operation CHARACTER VARYING NOT NULL,
+    created_at BIGINT NOT NULL,
+    CONSTRAINT feed_pk PRIMARY KEY (event_id),
+    CONSTRAINT feed_user_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
+
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id INTEGER NOT NULL AUTO_INCREMENT,
+    content CHARACTER VARYING NOT NULL,
+    is_positive BOOLEAN NOT NULL,
+    user_id INTEGER NOT NULL,
+    film_id INTEGER NOT NULL,
+    useful INTEGER DEFAULT 0,
+    CONSTRAINT reviews_pk PRIMARY KEY (review_id),
+    CONSTRAINT reviews_user_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT reviews_film_fk FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE
+    );
+
+CREATE TABLE IF NOT EXISTS review_likes (
+    review_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    is_useful BOOLEAN NOT NULL,
+    PRIMARY KEY (review_id, user_id),
+    CONSTRAINT review_likes_review_fk FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+    CONSTRAINT review_likes_user_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
 
