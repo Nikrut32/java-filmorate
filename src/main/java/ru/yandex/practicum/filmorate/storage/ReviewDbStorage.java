@@ -15,13 +15,13 @@ import java.util.Optional;
 @Repository
 @Slf4j
 public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStorage {
-    
+
     @Autowired
     private UserStorage userStorage;
 
     @Autowired
     private FilmStorage filmStorage;
-    
+
     private static final String INSERT_QUERY = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
