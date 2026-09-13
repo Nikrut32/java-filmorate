@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import java.util.ArrayList;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -37,13 +38,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             " duration = ?, rating_id = ? WHERE film_id = ?";
     private static final String ADD_LIKE_QUERY = "INSERT INTO liked_film (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM liked_film WHERE film_id = ? AND user_id = ?";
-    private static final String GET_TOP_QUERY = "SELECT fl.film_id, name, description, release_date, " +
+    /*private static final String GET_TOP_QUERY = "SELECT fl.film_id, name, description, release_date, " +
             "duration, fl.rating_id, r.name_rating, COUNT(lf.user_id) AS likes_count " +
             "FROM liked_film AS lf " +
             "RIGHT JOIN films AS fl ON lf.film_id = fl.film_id " +
             "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id " +
             "GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, fl.duration, fl.rating_id, r.name_rating " +
-            "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
+            "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";*/
+    private static final String GET_TOP_QUERY_BASE =
+            "SELECT fl.film_id, fl.name, fl.description, fl.release_date, " +
+                    "fl.duration, fl.rating_id, r.name_rating, COUNT(lf.user_id) AS likes_count " +
+                    "FROM liked_film AS lf " +
+                    "RIGHT JOIN films AS fl ON lf.film_id = fl.film_id " +
+                    "LEFT JOIN rating AS r ON fl.rating_id = r.rating_id ";
+
+    private static final String GET_TOP_QUERY_TAIL =
+            " GROUP BY fl.film_id, fl.name, fl.description, fl.release_date, " +
+                    "fl.duration, fl.rating_id, r.name_rating " +
+                    "ORDER BY likes_count DESC, fl.film_id ASC LIMIT ?";
     private static final String ADD_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
     private static final String CHECK_LIKE_QUERY = "SELECT COUNT(*) FROM liked_film WHERE film_id = ?";
 
@@ -157,11 +169,38 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
+    public List<Film> getTopFilms(long count, Long genreId, Integer year) {
+        StringBuilder sql = new StringBuilder(GET_TOP_QUERY_BASE);
+        List<Object> params = new ArrayList<>();
+
+        if (genreId != null) {
+            sql.append("JOIN film_genres AS fg ON fl.film_id = fg.film_id ");
+        }
+
+        sql.append("WHERE 1=1 ");
+
+        if (genreId != null) {
+            sql.append("AND fg.genre_id = ? ");
+            params.add(genreId);
+        }
+        if (year != null) {
+            sql.append("AND EXTRACT(YEAR FROM fl.release_date) = ? ");
+            params.add(year);
+        }
+
+        sql.append(GET_TOP_QUERY_TAIL);
+        params.add(count);
+
+        List<Film> films = findAll(sql.toString(), params.toArray());
+        films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
+        return films;
+    }
+    /*@Override
     public List<Film> getTopFilms(long count) {
         List<Film> films = findAll(GET_TOP_QUERY, count);
         films.forEach(film -> film.setGenres(genreStorage.getFilmIdGenreStorage(film.getId())));
         return films;
-    }
+    }*/
 
     @Override
     public void addGenreFilm(long filmId, long genreId) {

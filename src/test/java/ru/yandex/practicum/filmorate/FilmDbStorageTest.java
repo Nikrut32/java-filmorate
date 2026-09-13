@@ -253,4 +253,76 @@ class FilmDbStorageTest {
                 .birthday(LocalDate.of(1992, 2, 2))
                 .build();
     }
+
+    private Film createTestFilmWithGenres(List<Genre> genres) {
+        return Film.builder()
+                .name("Test Film With Genres")
+                .description("Test Description")
+                .releaseDate(LocalDate.of(2020, 1, 1))
+                .duration(120L)
+                .mpa(Mpa.builder().id(1L).build())
+                .genres(genres)
+                .build();
+    }
+
+    private Film createTestFilm2WithGenres(List<Genre> genres) {
+        return Film.builder()
+                .name("Test Film 2 With Genres")
+                .description("Test Description 2")
+                .releaseDate(LocalDate.of(2021, 2, 2))
+                .duration(130L)
+                .mpa(Mpa.builder().id(2L).build())
+                .genres(genres)
+                .build();
+    }
+
+    @Test
+    void getTopFilmsWithGenreFilterShouldReturnFilteredFilms() {
+        Film film1 = filmDbStorage.addFilmStorage(
+                createTestFilmWithGenres(List.of(Genre.builder().id(1L).build())));
+        Film film2 = filmDbStorage.addFilmStorage(
+                createTestFilmWithGenres(List.of(Genre.builder().id(2L).build())));
+        User user = userDbStorage.addUserStorage(createTestUser());
+
+        filmDbStorage.addLikeFilm(film1.getId(), user.getId());
+        filmDbStorage.addLikeFilm(film2.getId(), user.getId());
+
+        List<Film> topFilms = filmDbStorage.getTopFilms(10, 1L, null);
+
+        assertEquals(1, topFilms.size());
+        assertEquals(film1.getId(), topFilms.get(0).getId());
+    }
+
+    @Test
+    void getTopFilmsWithYearFilterShouldReturnFilteredFilms() {
+        Film film2020 = filmDbStorage.addFilmStorage(createTestFilm());      // 2020 год
+        Film film2021 = filmDbStorage.addFilmStorage(createTestFilm2());     // 2021 год
+        User user = userDbStorage.addUserStorage(createTestUser());
+
+        filmDbStorage.addLikeFilm(film2020.getId(), user.getId());
+        filmDbStorage.addLikeFilm(film2021.getId(), user.getId());
+
+        List<Film> topFilms = filmDbStorage.getTopFilms(10, null, 2020);
+
+        assertEquals(1, topFilms.size());
+        assertEquals(film2020.getId(), topFilms.get(0).getId());
+    }
+
+    @Test
+    void getTopFilmsWithGenreAndYearFilterShouldReturnFilteredFilms() {
+        Film film1 = filmDbStorage.addFilmStorage(
+                createTestFilmWithGenres(List.of(Genre.builder().id(1L).build())));  // 2020
+        Film film2 = filmDbStorage.addFilmStorage(
+                createTestFilm2WithGenres(List.of(Genre.builder().id(1L).build()))); // 2021
+        User user = userDbStorage.addUserStorage(createTestUser());
+
+        filmDbStorage.addLikeFilm(film1.getId(), user.getId());
+        filmDbStorage.addLikeFilm(film2.getId(), user.getId());
+
+        List<Film> topFilms = filmDbStorage.getTopFilms(10, 1L, 2020);
+
+        assertEquals(1, topFilms.size());
+        assertEquals(film1.getId(), topFilms.get(0).getId());
+    }
+
 }

@@ -50,14 +50,31 @@ public class FilmService {
         filmStorage.deleteLikeFilm(filmId, userId);
     }
 
-    public List<Film> getTopFilms(long count) {
+    public List<Film> getTopFilms(long count, Long genreId, Integer year) {
+        log.trace("Вход в метод getTopFilms: count={}, genreId={}, year={}", count, genreId, year);
+
+        if (count <= 0) {
+            log.warn("Некорректное значение count={}", count);
+            throw new ValidationException("Количество фильмов в топе не может быть ноль или меньше ноля");
+        }
+        if (genreId != null && !genreStorage.checkGenreId(genreId)) {
+            throw new ValidationNotObjectException("Жанр с таким ID: " + genreId + " не найден");
+        }
+        if (year != null && year < 1895) {
+            throw new ValidationException("Год не может быть раньше 1895");
+        }
+
+        return filmStorage.getTopFilms(count, genreId, year);
+    }
+
+    /*public List<Film> getTopFilms(long count) {
         log.trace("Вход в метод getTopFilms с параметром count={}", count);
         if (count <= 0) {
             log.warn("Некорректное значение count={}", count);
             throw new ValidationException("Количество фильмов в топе не может быть ноль или меньше ноля");
         }
         return filmStorage.getTopFilms(count);
-    }
+    }*/
 
     public void addGenreFilm(long filmId, long genreId) {
         log.trace("Вход в метод addGenreFilm с параметрами filmId={}, genreId={}", filmId, genreId);

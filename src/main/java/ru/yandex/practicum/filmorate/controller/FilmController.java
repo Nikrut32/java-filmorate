@@ -33,10 +33,20 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
+    public List<Film> topFilms(
+            @RequestParam(defaultValue = "10") long count,
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) Integer year) {
+        log.info("Получен запрос GET /films/popular с параметрами count={}, genreId={}, year={}",
+                count, genreId, year);
+        return filmService.getTopFilms(count, genreId, year);
+    }
+
+    /*@GetMapping("/popular")
     public List<Film> topFilms(@RequestParam(defaultValue = "10") long count) {
         log.info("Получен запрос GET /films/popular с параметром count={}", count);
         return filmService.getTopFilms(count);
-    }
+    }*/
 
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable long id) {
