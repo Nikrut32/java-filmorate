@@ -24,7 +24,9 @@ public interface FilmStorage {
     public List<Film> getTopFilms(long count, Long genreId, Integer year);
 
     default List<Film> getTopFilms(long count) {
+        
         return getTopFilms(count, null, null);
+        
     }
 
     void addGenreFilm(long filmId, long genreId);
