@@ -5,9 +5,9 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.util.List;
 
 public interface MpaStorage {
-    public Mpa getRatingById(long ratingId);
+    Mpa getRatingById(long ratingId);
 
-    public List<Mpa> getRatingStorage();
+    List<Mpa> getRatingStorage();
 
-    public boolean checkRatingId(long ratingId);
+    boolean checkRatingId(long ratingId);
 }

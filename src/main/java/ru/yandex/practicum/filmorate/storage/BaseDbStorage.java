@@ -18,12 +18,12 @@ public class BaseDbStorage<T> {
     protected final RowMapper<T> rowMapper;
 
     protected List<T> findAll(String query, Object... args) {
-        return jdbc.query(query, rowMapper, args);
+        return jdbc.query(query, rowMapper, (Object[]) args);
     }
 
     protected Optional<T> findOne(String query, Object... args) {
         try {
-            T object = jdbc.queryForObject(query, rowMapper, args);
+            T object = jdbc.queryForObject(query, rowMapper, (Object[]) args);
             return Optional.ofNullable(object);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -32,15 +32,19 @@ public class BaseDbStorage<T> {
 
     protected long insert(String query, Object... args) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbc.update((connect -> {
-            PreparedStatement statement = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+
+        jdbc.update(connection -> {
+            PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+
             for (int i = 0; i < args.length; i++) {
                 statement.setObject(i + 1, args[i]);
             }
+
             return statement;
-        }), keyHolder);
+        }, keyHolder);
 
         Integer id = keyHolder.getKeyAs(Integer.class);
+
         if (id != null) {
             return id;
         } else {
@@ -49,8 +53,9 @@ public class BaseDbStorage<T> {
     }
 
     protected void update(String query, Object... args) {
-        int result = jdbc.update(query, args);
-        if  (result == 0) {
+        int result = jdbc.update(query, (Object[]) args);
+
+        if (result == 0) {
             throw new DataProcessingException("Обновить данные не удалось");
         }
     }
@@ -59,10 +64,11 @@ public class BaseDbStorage<T> {
         if (!check) {
             throw new DataProcessingException("Удалить данные не удалось");
         }
-        jdbc.update(query, id);
+
+        jdbc.update(query, (Object[]) id);
     }
 
     protected void insertNotId(String query, Object... args) {
-        jdbc.update(query, args);
+        jdbc.update(query, (Object[]) args);
     }
 }

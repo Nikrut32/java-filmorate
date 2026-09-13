@@ -6,16 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
-import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
+import ru.yandex.practicum.filmorate.dal.mappers.*;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.MpaDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({FilmDbStorage.class, FilmRowMapper.class, GenreDbStorage.class, GenreRowMapper.class,
-        MpaRowMapper.class, MpaDbStorage.class})
+        MpaRowMapper.class, MpaDbStorage.class, DirectorDbStorage.class, DirectorRowMapper.class, LongRowMapper.class,
+        UserDbStorage.class, UserRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class GenreDbStorageTest {
 
@@ -51,8 +48,7 @@ public class GenreDbStorageTest {
 
     @Test
     void getGenreById_NotFound_ShouldThrowException() {
-        assertThrows(ValidationNotObjectException.class,
-                () -> genreDbStorage.getGenreById(999L));
+        assertThrows(ValidationNotObjectException.class, () -> genreDbStorage.getGenreById(999L));
     }
 
     @Test
@@ -71,17 +67,7 @@ public class GenreDbStorageTest {
 
     @Test
     void getFilmIdGenreStorage_ShouldReturnGenresForFilm() {
-        Film film = Film.builder()
-                .name("Test Film")
-                .description("Test Description")
-                .releaseDate(LocalDate.of(2020, 1, 1))
-                .duration(120L)
-                .mpa(Mpa.builder().id(1L).build())
-                .genres(List.of(
-                        Genre.builder().id(1L).build(),
-                        Genre.builder().id(2L).build()
-                ))
-                .build();
+        Film film = Film.builder().name("Test Film").description("Test Description").releaseDate(LocalDate.of(2020, 1, 1)).duration(120L).mpa(Mpa.builder().id(1L).build()).genres(List.of(Genre.builder().id(1L).build(), Genre.builder().id(2L).build())).build();
 
         Film created = filmDbStorage.addFilmStorage(film);
 
@@ -95,13 +81,7 @@ public class GenreDbStorageTest {
 
     @Test
     void getFilmIdGenreStorage_WhenNoGenres_ShouldReturnEmptyList() {
-        Film film = Film.builder()
-                .name("Test Film")
-                .description("Test Description")
-                .releaseDate(LocalDate.of(2020, 1, 1))
-                .duration(120L)
-                .mpa(Mpa.builder().id(1L).build())
-                .build();
+        Film film = Film.builder().name("Test Film").description("Test Description").releaseDate(LocalDate.of(2020, 1, 1)).duration(120L).mpa(Mpa.builder().id(1L).build()).build();
 
         Film created = filmDbStorage.addFilmStorage(film);
 
@@ -113,17 +93,7 @@ public class GenreDbStorageTest {
 
     @Test
     void deleteGenreByFilmId_ShouldDeleteAllGenresForFilm() {
-        Film film = Film.builder()
-                .name("Test Film")
-                .description("Test Description")
-                .releaseDate(LocalDate.of(2020, 1, 1))
-                .duration(120L)
-                .mpa(Mpa.builder().id(1L).build())
-                .genres(List.of(
-                        Genre.builder().id(1L).build(),
-                        Genre.builder().id(2L).build()
-                ))
-                .build();
+        Film film = Film.builder().name("Test Film").description("Test Description").releaseDate(LocalDate.of(2020, 1, 1)).duration(120L).mpa(Mpa.builder().id(1L).build()).genres(List.of(Genre.builder().id(1L).build(), Genre.builder().id(2L).build())).build();
 
         Film created = filmDbStorage.addFilmStorage(film);
 
@@ -138,13 +108,7 @@ public class GenreDbStorageTest {
 
     @Test
     void deleteGenreByFilmId_WhenNoGenres_ShouldNotThrowException() {
-        Film film = Film.builder()
-                .name("Test Film")
-                .description("Test Description")
-                .releaseDate(LocalDate.of(2020, 1, 1))
-                .duration(120L)
-                .mpa(Mpa.builder().id(1L).build())
-                .build();
+        Film film = Film.builder().name("Test Film").description("Test Description").releaseDate(LocalDate.of(2020, 1, 1)).duration(120L).mpa(Mpa.builder().id(1L).build()).build();
 
         Film created = filmDbStorage.addFilmStorage(film);
 
