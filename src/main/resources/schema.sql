@@ -4,7 +4,6 @@ DROP TABLE IF EXISTS feed;
 DROP TABLE IF EXISTS liked_film;
 DROP TABLE IF EXISTS film_genres;
 DROP TABLE IF EXISTS grade_reviews;
-DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS film_directors;
 DROP TABLE IF EXISTS user_friends;
 DROP TABLE IF EXISTS films;
@@ -119,18 +118,6 @@ CREATE TABLE IF NOT EXISTS review_likes (
     CONSTRAINT review_likes_review_fk FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
     CONSTRAINT review_likes_user_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
-
-CREATE TABLE IF NOT EXISTS reviews (
-    review_id INTEGER NOT NULL AUTO_INCREMENT,
-    film_id INTEGER,
-    user_id INTEGER NOT NULL,
-    content VARCHAR NOT NULL,
-    is_positive BOOLEAN NOT NULL,
-    useful INTEGER DEFAULT 0,
-    CONSTRAINT CONSTRAINT_R PRIMARY KEY (review_id),
-    CONSTRAINT CONSTRAINT_R1 FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
-    CONSTRAINT CONSTRAINT_R2 FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
 
 CREATE TABLE IF NOT EXISTS grade_reviews (
     review_id INTEGER NOT NULL,
