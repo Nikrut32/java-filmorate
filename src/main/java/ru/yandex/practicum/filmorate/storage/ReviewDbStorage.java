@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Review;
+import org.springframework.beans.factory.annotation.Autowired;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +15,13 @@ import java.util.Optional;
 @Repository
 @Slf4j
 public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStorage {
+    
+    @Autowired
+    private UserStorage userStorage;
 
+    @Autowired
+    private FilmStorage filmStorage;
+    
     private static final String INSERT_QUERY = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
@@ -35,6 +43,17 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public Review addReview(Review review) {
+        if (review.getContent() == null || review.getContent().isBlank()) {
+            throw new ValidationException("Содержание отзыва не может быть пустым");
+        }
+        if (!userStorage.checkingId(review.getUserId())) {
+            throw new ValidationNotObjectException(
+                    "Пользователь с таким ID: " + review.getUserId() + " не найден");
+        }
+        if (!filmStorage.checkingId(review.getFilmId())) {
+            throw new ValidationNotObjectException(
+                    "Фильм с таким ID: " + review.getFilmId() + " не найден");
+        }
         int useful = review.getUseful() == null ? 0 : review.getUseful();
         long id = insert(INSERT_QUERY,
                 review.getContent(),
