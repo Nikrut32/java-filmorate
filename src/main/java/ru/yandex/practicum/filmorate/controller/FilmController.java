@@ -94,5 +94,15 @@ public class FilmController {
         return new AnswerString("Пользователь " + userLogin + " убрал лайк поставленный на фильм «" + filmName + "»");
     }
 
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(
+            @RequestParam long userId,
+            @RequestParam long friendId
+    ) {
+        log.info("Получен запрос GET /films/common с параметрами userId={}, friendId={}", userId, friendId);
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        log.info("Успешно возвращено {} общих фильмов", commonFilms.size());
+        return commonFilms;
+    }
 
 }
