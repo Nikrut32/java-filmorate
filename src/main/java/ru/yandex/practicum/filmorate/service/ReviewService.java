@@ -90,6 +90,7 @@ public void addLikeToReview(long reviewId, long userId, boolean isUseful) {
         throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
     }
     reviewStorage.addLikeToReview(reviewId, userId, isUseful);
+    feedStorage.addEvent(userId, reviewId, EventType.LIKE.name(), Operation.ADD.name());
 }
 
 @Transactional
@@ -101,5 +102,6 @@ public void deleteLikeFromReview(long reviewId, long userId) {
         throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
     }
     reviewStorage.deleteLikeFromReview(reviewId, userId);
+    feedStorage.addEvent(userId, reviewId, EventType.LIKE.name(), Operation.REMOVE.name());
 }
 }
