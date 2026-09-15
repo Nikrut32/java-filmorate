@@ -1,10 +1,15 @@
+DROP TABLE IF EXISTS review_likes;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS feed;
 DROP TABLE IF EXISTS liked_film;
 DROP TABLE IF EXISTS film_genres;
+DROP TABLE IF EXISTS film_directors;
 DROP TABLE IF EXISTS user_friends;
 DROP TABLE IF EXISTS films;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS genres;
 DROP TABLE IF EXISTS rating;
+DROP TABLE IF EXISTS directors;
 
 CREATE TABLE IF NOT EXISTS genres (
     genre_id INTEGER NOT NULL AUTO_INCREMENT,
@@ -17,6 +22,12 @@ CREATE TABLE IF NOT EXISTS rating (
     name_rating CHARACTER VARYING,
     CONSTRAINT CONSTRAINT_C PRIMARY KEY (rating_id)
 );
+
+CREATE TABLE IF NOT EXISTS directors (
+    director_id INTEGER NOT NULL AUTO_INCREMENT,
+    name CHARACTER VARYING NOT NULL,
+    CONSTRAINT directors_pk PRIMARY KEY (director_id)
+    );
 
 CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER NOT NULL AUTO_INCREMENT,
@@ -37,6 +48,20 @@ CREATE TABLE IF NOT EXISTS films (
     CONSTRAINT CONSTRAINT_5 PRIMARY KEY (film_id),
     CONSTRAINT CONSTRAINT_5C FOREIGN KEY (rating_id) REFERENCES rating(rating_id)
 );
+
+CREATE TABLE IF NOT EXISTS film_directors (
+    film_id INTEGER NOT NULL,
+    director_id INTEGER NOT NULL,
+    PRIMARY KEY (film_id, director_id),
+    CONSTRAINT film_directors_film_fk
+    FOREIGN KEY (film_id)
+    REFERENCES films(film_id)
+    ON DELETE CASCADE,
+    CONSTRAINT film_directors_director_fk
+    FOREIGN KEY (director_id)
+    REFERENCES directors(director_id)
+    ON DELETE CASCADE
+    );
 
 CREATE TABLE IF NOT EXISTS liked_film (
     film_id INTEGER NOT NULL,
@@ -62,4 +87,34 @@ CREATE TABLE IF NOT EXISTS film_genres (
     CONSTRAINT CONSTRAINT_A FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
     CONSTRAINT CONSTRAINT_A3 FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
 );
+CREATE TABLE IF NOT EXISTS feed (
+    event_id INTEGER NOT NULL AUTO_INCREMENT,
+    user_id INTEGER NOT NULL,
+    entity_id INTEGER NOT NULL,
+    event_type CHARACTER VARYING NOT NULL,
+    operation CHARACTER VARYING NOT NULL,
+    created_at BIGINT NOT NULL,
+    CONSTRAINT feed_pk PRIMARY KEY (event_id),
+    CONSTRAINT feed_user_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
 
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id INTEGER NOT NULL AUTO_INCREMENT,
+    content CHARACTER VARYING NOT NULL,
+    is_positive BOOLEAN NOT NULL,
+    user_id INTEGER NOT NULL,
+    film_id INTEGER NOT NULL,
+    useful INTEGER DEFAULT 0,
+    CONSTRAINT reviews_pk PRIMARY KEY (review_id),
+    CONSTRAINT reviews_user_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT reviews_film_fk FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE
+    );
+
+CREATE TABLE IF NOT EXISTS review_likes (
+    review_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    is_useful BOOLEAN NOT NULL,
+    PRIMARY KEY (review_id, user_id),
+    CONSTRAINT review_likes_review_fk FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+    CONSTRAINT review_likes_user_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
