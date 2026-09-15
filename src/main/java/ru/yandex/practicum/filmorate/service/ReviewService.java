@@ -81,27 +81,25 @@ public class ReviewService {
         return reviewStorage.getReviewsByFilmId(filmId, count);
     }
 
-@Transactional
-public void addLikeToReview(long reviewId, long userId, boolean isUseful) {
-    if (!reviewStorage.checkingId(reviewId)) {
-        throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
+    @Transactional
+    public void addLikeToReview(long reviewId, long userId, boolean isUseful) {
+        if (!reviewStorage.checkingId(reviewId)) {
+            throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
+        }
+        if (!userStorage.checkingId(userId)) {
+            throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
+        }
+        reviewStorage.addLikeToReview(reviewId, userId, isUseful);
     }
-    if (!userStorage.checkingId(userId)) {
-        throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
-    }
-    reviewStorage.addLikeToReview(reviewId, userId, isUseful);
-    feedStorage.addEvent(userId, reviewId, EventType.LIKE.name(), Operation.ADD.name());
-}
 
-@Transactional
-public void deleteLikeFromReview(long reviewId, long userId) {
-    if (!reviewStorage.checkingId(reviewId)) {
-        throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
+    @Transactional
+    public void deleteLikeFromReview(long reviewId, long userId) {
+        if (!reviewStorage.checkingId(reviewId)) {
+            throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
+        }
+        if (!userStorage.checkingId(userId)) {
+            throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
+        }
+        reviewStorage.deleteLikeFromReview(reviewId, userId);
     }
-    if (!userStorage.checkingId(userId)) {
-        throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
-    }
-    reviewStorage.deleteLikeFromReview(reviewId, userId);
-    feedStorage.addEvent(userId, reviewId, EventType.LIKE.name(), Operation.REMOVE.name());
-}
 }

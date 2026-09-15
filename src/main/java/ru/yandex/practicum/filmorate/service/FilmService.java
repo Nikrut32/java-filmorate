@@ -39,31 +39,24 @@ public class FilmService {
             log.warn("Попытка добавить лайк от несуществующего пользователя с id={}", userId);
             throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
         }
-        if (filmStorage.checkLike(filmId, userId)) {
-            log.warn("Пользователь {} уже лайкал фильм {}", userId, filmId);
-            return;
+        if (!filmStorage.checkLike(filmId, userId)) {
+            filmStorage.addLikeFilm(filmId, userId);
         }
-        filmStorage.addLikeFilm(filmId, userId);
         feedStorage.addEvent(userId, filmId, EventType.LIKE.name(), Operation.ADD.name());
-
     }
 
     @Transactional
     public void deleteLike(long filmId, long userId) {
         log.trace("Вход в метод deleteLike с параметрами filmId={}, userId={}", filmId, userId);
         if (!filmStorage.checkingId(filmId)) {
-            log.warn("Попытка удалить лайк у несуществующего фильма с id={}", filmId);
             throw new ValidationNotObjectException("Фильм с таким ID:" + filmId + " не найден");
         }
         if (!userStorage.checkingId(userId)) {
-            log.warn("Попытка удалить лайк от несуществующего пользователя с id={}", userId);
             throw new ValidationNotObjectException("Пользователь с таким ID: " + userId + " не найден");
         }
-        if (!filmStorage.checkLike(filmId, userId)) {
-            log.warn("Пользователь {} не лайкал фильм {}", userId, filmId);
-            return;
+        if (filmStorage.checkLike(filmId, userId)) {
+            filmStorage.deleteLikeFilm(filmId, userId);
         }
-        filmStorage.deleteLikeFilm(filmId, userId);
         feedStorage.addEvent(userId, filmId, EventType.LIKE.name(), Operation.REMOVE.name());
     }
 
