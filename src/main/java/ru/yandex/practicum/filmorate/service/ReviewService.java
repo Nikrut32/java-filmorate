@@ -8,8 +8,6 @@ import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
-import ru.yandex.practicum.filmorate.model.EventType;
-import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -81,34 +79,25 @@ public class ReviewService {
         return reviewStorage.getReviewsByFilmId(filmId, count);
     }
 
-    @Transactional
-    public void addLikeToReview(long reviewId, long userId, boolean isUseful) {
-        if (!reviewStorage.checkingId(reviewId)) {
-            throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
-        }
-        if (!userStorage.checkingId(userId)) {
-            throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
-        }
-        reviewStorage.addLikeToReview(reviewId, userId, isUseful);
-
-        if (isUseful) {
-            feedStorage.addEvent(
-                    userId,
-                    reviewId,
-                    EventType.LIKE.name(),
-                    Operation.ADD.name()
-            );
-        }
+@Transactional
+public void addLikeToReview(long reviewId, long userId, boolean isUseful) {
+    if (!reviewStorage.checkingId(reviewId)) {
+        throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
     }
-
-    @Transactional
-    public void deleteLikeFromReview(long reviewId, long userId) {
-        if (!reviewStorage.checkingId(reviewId)) {
-            throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
-        }
-        if (!userStorage.checkingId(userId)) {
-            throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
-        }
-        reviewStorage.deleteLikeFromReview(reviewId, userId);
+    if (!userStorage.checkingId(userId)) {
+        throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
     }
+    reviewStorage.addLikeToReview(reviewId, userId, isUseful);
+}
+
+@Transactional
+public void deleteLikeFromReview(long reviewId, long userId) {
+    if (!reviewStorage.checkingId(reviewId)) {
+        throw new ValidationNotObjectException("Отзыв с id: " + reviewId + " не найден");
+    }
+    if (!userStorage.checkingId(userId)) {
+        throw new ValidationNotObjectException("Пользователь с id: " + userId + " не найден");
+    }
+    reviewStorage.deleteLikeFromReview(reviewId, userId);
+}
 }
