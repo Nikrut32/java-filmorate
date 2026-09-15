@@ -9,6 +9,8 @@ import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.storage.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
