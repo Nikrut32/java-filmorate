@@ -132,7 +132,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     private boolean checkFriendById(long userId, long friendId) {
         Integer count = jdbc.queryForObject(CHECK_FRIEND_BY_ID_QUERY, Integer.class, userId, friendId);
-        return count != null;
+        return count != null && count > 0;
     }
 
     private List<Long> filmsIdLikedByUser(long userId) {
