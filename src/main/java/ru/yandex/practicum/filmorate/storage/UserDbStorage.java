@@ -87,7 +87,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public void deleteFriend(long userId, long friendId) {
-        delete(checkFriendById(userId, friendId), DElETE_FRIEND_QUERY, userId, friendId);
+        delete(true, DElETE_FRIEND_QUERY, userId, friendId);
     }
 
     @Override
