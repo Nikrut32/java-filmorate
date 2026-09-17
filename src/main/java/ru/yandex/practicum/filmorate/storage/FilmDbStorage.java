@@ -118,9 +118,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         update(UPDATE_QUERY, updateFilm.getName(), updateFilm.getDescription(), updateFilm.getReleaseDate(), updateFilm.getDuration(), updateFilm.getMpa().getId(), updateFilm.getId());
 
-        if (updateFilm.getDirectors() != null) {
-            jdbc.update(DELETE_FILM_DIRECTORS_QUERY, updateFilm.getId());
+        jdbc.update(DELETE_FILM_DIRECTORS_QUERY, updateFilm.getId());
 
+        if (updateFilm.getDirectors() != null && !updateFilm.getDirectors().isEmpty()) {
             saveDirectors(updateFilm.getId(), updateFilm.getDirectors());
         }
 

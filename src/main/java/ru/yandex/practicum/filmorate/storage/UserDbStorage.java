@@ -102,6 +102,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public List<Long> recommendationsFilmsId(long userRecId) {
+        if (!checkingId(userRecId)) {
+            throw new ValidationNotObjectException("Пользователь с таким ID: " + userRecId + " не найден");
+        }
         List<Long> coincidencesUsersId = coincidencesUsersId(userRecId);
         Set<Long> filmsIdUserSet = new HashSet<>();
 

@@ -47,6 +47,9 @@ public class ReviewService {
 
     @Transactional
     public Review updateReview(UpdateReviewRequest request) {
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            throw new ValidationException("Содержание отзыва не может быть пустым");
+        }
         Review review = reviewStorage.getReviewById(request.getReviewId());
 
         if (request.hasContent()) {
