@@ -49,8 +49,7 @@ public class MpaDbStorageTest {
 
     @Test
     void getRatingById_NotFound_ShouldThrowException() {
-        assertThrows(ValidationNotObjectException.class,
-                () -> mpaDbStorage.getRatingById(999L));
+        assertThrows(ValidationNotObjectException.class, () -> mpaDbStorage.getRatingById(999L));
     }
 
     @Test

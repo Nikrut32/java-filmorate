@@ -28,14 +28,19 @@ public class FilmController {
     @GetMapping
     public List<Film> getFilms() {
         log.info("Получен запрос GET /films. Текущее количество фильмов: {}", filmStorage.getFilmStorage().size());
-        log.info("Успешно возвращено {} фильмов", filmStorage.getFilmStorage().size());
         return filmStorage.getFilmStorage();
     }
 
     @GetMapping("/popular")
-    public List<Film> topFilms(@RequestParam(defaultValue = "10") long count) {
-        log.info("Получен запрос GET /films/popular с параметром count={}", count);
-        return filmService.getTopFilms(count);
+    public List<Film> topFilms(@RequestParam(defaultValue = "10") long count, @RequestParam(required = false) Long genreId, @RequestParam(required = false) Integer year) {
+        log.info("Получен запрос GET /films/popular с параметрами count={}, genreId={}, year={}", count, genreId, year);
+        return filmService.getTopFilms(count, genreId, year);
+    }
+
+    @GetMapping("/search")
+    public List<Film> searchFilms(@RequestParam String query, @RequestParam String by) {
+        log.info("Получен запрос GET /films/search: query={}, by={}", query, by);
+        return filmService.searchFilms(query, by);
     }
 
     @GetMapping("/{id}")
@@ -47,7 +52,6 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         log.info("Получен запрос POST /films на добавление фильма: {}", film);
-        Film film2 = film;
         Film createdFilm = filmStorage.addFilmStorage(film);
 
         log.info("Фильм успешно создан с id={}: {}", createdFilm.getId(), createdFilm.getName());
@@ -94,5 +98,16 @@ public class FilmController {
         return new AnswerString("Пользователь " + userLogin + " убрал лайк поставленный на фильм «" + filmName + "»");
     }
 
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable long directorId, @RequestParam(defaultValue = "year") String sortBy) {
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
+    }
 
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam long userId, @RequestParam long friendId) {
+        log.info("Получен запрос GET /films/common с параметрами userId={}, friendId={}", userId, friendId);
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        log.info("Успешно возвращено {} общих фильмов", commonFilms.size());
+        return commonFilms;
+    }
 }

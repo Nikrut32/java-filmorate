@@ -1,43 +1,39 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.mappers.LongRowMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ValidationNotObjectException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @Slf4j
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
-    private static final String INSERT_QUERY = "INSERT INTO users (email, " +
-            "login, name, birthday) VALUES (?, ?, ?, ?)";
+    @Autowired
+    private LongRowMapper rowMapperLong;
+
+    private static final String INSERT_QUERY = "INSERT INTO users (email, " + "login, name, birthday) VALUES (?, ?, ?, ?)";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE user_id = ?";
-    private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, " +
-            "name = ?, birthday = ? WHERE user_id = ?";
+    private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, " + "name = ?, birthday = ? WHERE user_id = ?";
     private static final String GET_BY_ID_QUERY = "SELECT * FROM users WHERE user_id = ?";
     private static final String GET_ALL_QUERY = "SELECT * FROM users";
     private static final String GET_BY_EMAIL_QUERY = "SELECT * FROM users WHERE email = ?";
-    private static final String ADD_FRIEND_QUERY = "INSERT INTO user_friends (user_id, friend_id, status) " +
-            "VALUES (?, ?, ?)";
+    private static final String ADD_FRIEND_QUERY = "INSERT INTO user_friends (user_id, friend_id, status) " + "VALUES (?, ?, ?)";
     private static final String DElETE_FRIEND_QUERY = "DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?";
-    private static final String CHECK_FRIEND_QUERY = "SELECT COUNT(*) FROM user_friends WHERE (user_id = ? " +
-            "AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
-    private static final String UPDATE_STATUS_FRIEND_QUERY = "UPDATE user_friends SET status = ? " +
-            "WHERE user_id = ? AND friend_id = ?";
-    private static final String GET_ALL_FRIENDS_QUERY = "SELECT us.user_id, us.email, us.login, us.name, us.birthday " +
-            "FROM user_friends AS uf JOIN users AS us ON uf.friend_id=us.user_id WHERE uf.user_id = ?";
-    private static final String GET_COMMON_FRIENDS_QUERY = "SELECT DISTINCT uf1.friend_id, us.user_id, " +
-            "us.email, us.login, us.name, us.birthday " +
-            "FROM user_friends uf1 JOIN user_friends uf2 ON uf1.friend_id = uf2.friend_id " +
-            "JOIN users us ON uf1.friend_id = us.user_id WHERE uf1.user_id = ? AND uf2.user_id = ?";
-    private static final String CHECK_FRIEND_BY_ID_QUERY = "SELECT COUNT(*) FROM user_friends " +
-            "WHERE user_id = ? AND friend_id = ?";
+    private static final String CHECK_FRIEND_QUERY = "SELECT COUNT(*) FROM user_friends WHERE (user_id = ? " + "AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+    private static final String UPDATE_STATUS_FRIEND_QUERY = "UPDATE user_friends SET status = ? " + "WHERE user_id = ? AND friend_id = ?";
+    private static final String GET_ALL_FRIENDS_QUERY = "SELECT us.user_id, us.email, us.login, us.name, us.birthday " + "FROM user_friends AS uf JOIN users AS us ON uf.friend_id=us.user_id WHERE uf.user_id = ?";
+    private static final String GET_COMMON_FRIENDS_QUERY = "SELECT DISTINCT uf1.friend_id, us.user_id, " + "us.email, us.login, us.name, us.birthday " + "FROM user_friends uf1 JOIN user_friends uf2 ON uf1.friend_id = uf2.friend_id " + "JOIN users us ON uf1.friend_id = us.user_id WHERE uf1.user_id = ? AND uf2.user_id = ?";
+    private static final String CHECK_FRIEND_BY_ID_QUERY = "SELECT COUNT(*) FROM user_friends " + "WHERE user_id = ? AND friend_id = ?";
+    private static final String GET_ID_FILM_LIKED_BY_USER = "SELECT film_id FROM liked_film WHERE user_id = ?";
+    private static final String GET_ALL_USERS_ID = "SELECT user_id FROM users";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> rowMapper) {
         super(jdbc, rowMapper);
@@ -50,11 +46,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         if (checkEmail(user.getEmail())) {
             throw new ValidationException("Пользователь с таким имейлом уже существует");
         }
-        long id = insert(INSERT_QUERY,
-                user.getEmail(),
-                user.getLogin(),
-                name,
-                user.getBirthday());
+        long id = insert(INSERT_QUERY, user.getEmail(), user.getLogin(), name, user.getBirthday());
         user.setName(name);
         user.setId(id);
         return user;
@@ -67,19 +59,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public User updateUserStorage(User updateUser) {
-        update(UPDATE_QUERY,
-                updateUser.getEmail(),
-                updateUser.getLogin(),
-                updateUser.getName(),
-                updateUser.getBirthday(),
-                updateUser.getId());
+        update(UPDATE_QUERY, updateUser.getEmail(), updateUser.getLogin(), updateUser.getName(), updateUser.getBirthday(), updateUser.getId());
         return updateUser;
     }
 
     @Override
     public User getUserById(long userId) {
-        return findOne(GET_BY_ID_QUERY, userId)
-                .orElseThrow(() -> new ValidationNotObjectException("Пользваотель с id: " + userId + " не найден"));
+        return findOne(GET_BY_ID_QUERY, userId).orElseThrow(() -> new ValidationNotObjectException("Пользваотель с id: " + userId + " не найден"));
     }
 
     @Override
@@ -101,7 +87,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public void deleteFriend(long userId, long friendId) {
-        delete(checkFriendById(userId, friendId), DElETE_FRIEND_QUERY, userId, friendId);
+        delete(true, DElETE_FRIEND_QUERY, userId, friendId);
     }
 
     @Override
@@ -110,8 +96,27 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     }
 
     @Override
-    public List<User> getCommonFriends(long userId,  long otherId) {
+    public List<User> getCommonFriends(long userId, long otherId) {
         return findAll(GET_COMMON_FRIENDS_QUERY, userId, otherId);
+    }
+
+    @Override
+    public List<Long> recommendationsFilmsId(long userRecId) {
+        if (!checkingId(userRecId)) {
+            throw new ValidationNotObjectException("Пользователь с таким ID: " + userRecId + " не найден");
+        }
+        List<Long> coincidencesUsersId = coincidencesUsersId(userRecId);
+        Set<Long> filmsIdUserSet = new HashSet<>();
+
+        for (Long userId : coincidencesUsersId) {
+            List<Long> filmsId = filmsIdLikedByUser(userId);
+            filmsIdUserSet.addAll(filmsId);
+        }
+
+        Set<Long> alreadyLiked = new HashSet<>(filmsIdLikedByUser(userRecId));
+        filmsIdUserSet.removeAll(alreadyLiked); // исключаем уже просмотренное
+
+        return new ArrayList<>(filmsIdUserSet);
     }
 
     private boolean checkEmail(String email) {
@@ -130,7 +135,38 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     private boolean checkFriendById(long userId, long friendId) {
         Integer count = jdbc.queryForObject(CHECK_FRIEND_BY_ID_QUERY, Integer.class, userId, friendId);
-        return count != null;
+        return count != null && count > 0;
+    }
+
+    private List<Long> filmsIdLikedByUser(long userId) {
+        return jdbc.query(GET_ID_FILM_LIKED_BY_USER, rowMapperLong, userId);
+    }
+
+    private List<Long> coincidencesUsersId(long userRecId) {
+        Set<Long> filmsIdUserSet = new HashSet<>(filmsIdLikedByUser(userRecId));
+        if (filmsIdUserSet.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> usersIds = jdbc.query(GET_ALL_USERS_ID, rowMapperLong);
+        long max = -1;
+        List<Long> result = new ArrayList<>();
+
+        for (Long userId : usersIds) {
+            if (userId == userRecId) continue;
+            long count = filmsIdLikedByUser(userId).stream().filter(filmsIdUserSet::contains).count();
+
+            if (count > max) {
+                max = count;
+                result = new ArrayList<>(List.of(userId));
+            } else if (count == max) {
+                result.add(userId);
+            }
+        }
+        if (max == 0) {
+            return new ArrayList<>();
+        }
+        return result;
     }
 
     private void exceptionUser(User user) {

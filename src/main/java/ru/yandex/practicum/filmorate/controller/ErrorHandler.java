@@ -28,7 +28,9 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValid(final MethodArgumentNotValidException e) {
-        return new ErrorResponse("Ошибка валидации", e.getBindingResult().getFieldError().getDefaultMessage());
+        var fieldError = e.getBindingResult().getFieldError();
+        String message = fieldError != null ? fieldError.getDefaultMessage() : "Ошибка валидации полей запроса";
+        return new ErrorResponse("Ошибка валидации", message);
     }
 
     @ExceptionHandler
